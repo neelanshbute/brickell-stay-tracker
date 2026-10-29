@@ -3,7 +3,7 @@ import { getStore } from "@netlify/blobs";
 const store = getStore("brickell-hearts");
 
 export default async (req) => {
-  let ids = (await store.get("ids", { type: "json" })) || [];
+  let ids = (await store.get("ids", { type: "json", consistency: "strong" })) || [];
   if (!Array.isArray(ids)) ids = [];
   if (req.method === "POST") {
     const body = await req.json().catch(() => ({}));
