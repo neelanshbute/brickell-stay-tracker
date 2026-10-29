@@ -4,12 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Brickell 2BR Stay Tracker</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
   :root {
     --bg: #f8fafc;
-    --card: #ffffff;
+    --card: #fff;
     --border: #e2e8f0;
     --text: #0f172a;
     --muted: #64748b;
@@ -22,131 +20,44 @@
     --low-text: #991b1b;
   }
   * { box-sizing: border-box; }
-  body {
-    margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
-  }
-  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
-  header h1 { font-size: 1.75rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+  body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
+  header h1 { font-size: 1.8rem; margin: 0 0 4px; }
   header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
-  .tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
-  .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 999px; background: #e2e8f0; color: #334155; }
-  .tabs {
-    display: flex;
-    gap: 4px;
-    margin: 20px 0 16px;
-    border-bottom: 1px solid var(--border);
-  }
-  .tab {
-    padding: 10px 20px;
-    cursor: pointer;
-    border: none;
-    background: transparent;
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--muted);
-    border-bottom: 2px solid transparent;
-  }
-  .tab.active {
-    color: var(--blue);
-    border-bottom-color: var(--blue);
-  }
-  .panel { display: none; }
-  .panel.active { display: block; }
-  .filters {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-  }
-  .filters input, .filters select {
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 0.9rem;
-    min-width: 160px;
-  }
-  .listings { display: flex; flex-direction: column; gap: 16px; }
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  }
-  .card-inner { display: flex; flex-direction: column; }
-  @media (min-width: 700px) {
-    .card-inner { flex-direction: row; }
-  }
-  .thumb {
-    width: 100%;
-    height: 200px;
-    background: #e2e8f0;
-    position: relative;
-    flex-shrink: 0;
-    overflow: hidden;
-  }
-  .thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  @media (min-width: 700px) {
-    .thumb { width: 240px; height: auto; min-height: 220px; }
-  }
-  .fit-badge {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 999px;
-    z-index: 1;
-  }
+  .tags { margin: 12px 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 999px; background: #e2e8f0; }
+  .filters { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin: 16px 0; display: flex; flex-wrap: wrap; gap: 10px; }
+  .filters input, .filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.15s; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+  .gallery-row { display: flex; overflow-x: auto; height: 200px; scrollbar-width: thin; }
+  .gallery-row img { height: 100%; min-width: 280px; object-fit: cover; flex-shrink: 0; }
+  .card-body { padding: 14px; }
+  .fit-badge { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-bottom: 6px; }
   .fit-high { background: var(--high); color: var(--high-text); }
   .fit-med { background: var(--med); color: var(--med-text); }
   .fit-low { background: var(--low); color: var(--low-text); }
-  .content { padding: 16px; flex: 1; }
-  .title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-  .title-row h3 { margin: 0; font-size: 1.1rem; }
-  .sub { margin: 2px 0 0; font-size: 0.85rem; color: var(--muted); }
-  .price { font-weight: 700; font-size: 1.15rem; text-align: right; }
-  .size { font-size: 0.8rem; color: var(--muted); text-align: right; }
-  .meta { margin-top: 8px; font-size: 0.85rem; color: #475569; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
-  .notes { margin: 8px 0; font-size: 0.875rem; }
-  .notes strong { color: var(--text); }
-  .fit-reason { font-size: 0.75rem; color: var(--muted); margin: 4px 0 8px; }
-  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
-  .actions a { color: var(--blue); font-size: 0.85rem; text-decoration: underline; }
-  .actions select, .actions input, .notes-input {
-    font-size: 0.85rem;
-    padding: 6px 8px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
+  .price { font-weight: 700; font-size: 1.1rem; }
+  .detail-view { display: none; }
+  .detail-view.active { display: flex; min-height: calc(100vh - 80px); }
+  .sidebar { width: 280px; background: var(--card); border-right: 1px solid var(--border); overflow-y: auto; padding: 12px; flex-shrink: 0; }
+  .sidebar-item { padding: 10px; border-radius: 8px; cursor: pointer; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
+  .sidebar-item:hover, .sidebar-item.active { background: #f1f5f9; }
+  .sidebar-item img { width: 56px; height: 42px; object-fit: cover; border-radius: 4px; }
+  .main { flex: 1; overflow-y: auto; padding: 20px; }
+  .full-gallery { display: flex; overflow-x: auto; gap: 8px; height: 420px; margin-bottom: 20px; scrollbar-width: thin; }
+  .full-gallery img { height: 100%; min-width: 500px; object-fit: cover; border-radius: 8px; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .back-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-size: 0.95rem; margin-bottom: 12px; }
+  @media (max-width: 800px) {
+    .detail-view { flex-direction: column; }
+    .sidebar { width: 100%; max-height: 180px; border-right: none; border-bottom: 1px solid var(--border); }
+    .full-gallery { height: 280px; }
+    .full-gallery img { min-width: 320px; }
+    .info-grid { grid-template-columns: 1fr; }
   }
-  .next-action { width: 100%; margin-top: 6px; }
-  .notes-input { width: 100%; margin-top: 6px; min-height: 52px; resize: vertical; }
-  #map { height: 520px; border-radius: 12px; border: 1px solid var(--border); }
-  .footer-note {
-    margin-top: 32px;
-    padding: 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    font-size: 0.85rem;
-    color: var(--muted);
-  }
-  .empty { text-align: center; color: var(--muted); padding: 40px 0; }
 </style>
 </head>
 <body>
@@ -161,22 +72,17 @@
     </div>
   </header>
 
-  <div class="tabs">
-    <button class="tab active" data-tab="listings">Listings</button>
-    <button class="tab" data-tab="map">Map</button>
-  </div>
-
-  <div id="listings-panel" class="panel active">
+  <div id="list-view">
     <div class="filters">
-      <input id="search" type="text" placeholder="Search listings…">
+      <input id="search" type="text" placeholder="Search…">
       <select id="filterFit">
-        <option value="">All fit scores</option>
-        <option value="high">High (≥8)</option>
-        <option value="med">Medium (6–7.9)</option>
-        <option value="low">Low (≤5.9)</option>
+        <option value="">All fit</option>
+        <option value="high">High ≥8</option>
+        <option value="med">Medium 6–7.9</option>
+        <option value="low">Low ≤5.9</option>
       </select>
       <select id="filterStatus">
-        <option value="">All statuses</option>
+        <option value="">All status</option>
         <option value="new">New</option>
         <option value="reached">Reached out</option>
         <option value="responded">Got response</option>
@@ -185,20 +91,17 @@
         <option value="booked">Booked</option>
       </select>
     </div>
-    <div id="listings" class="listings"></div>
+    <div id="grid" class="grid"></div>
   </div>
 
-  <div id="map-panel" class="panel">
-    <div id="map"></div>
-  </div>
-
-  <div class="footer-note">
-    <strong>How to use:</strong> Status, next action, and notes save in your browser. Tell me any new listings and I’ll add them. Research on floor plans & building reviews is still running.
+  <div id="detail-view" class="detail-view">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="main" id="main-detail"></div>
   </div>
 </div>
 
 <script>
-const defaultListings = [
+const listings = [
   {
     id: "ev-charger",
     name: "Brickell 2/2 – EV Charger, Free Parking, Big Balcony",
@@ -212,14 +115,20 @@ const defaultListings = [
     available: "Dec 12, 2026",
     source: "Furnished Finder",
     link: "https://www.furnishedfinder.com/property/956644_1",
-    img: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80",
+      "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=1200&q=80"
+    ],
     amenities: "In-unit laundry, parking + EV, large balcony, workspace, sunrise views",
     buildingAmenities: "Researching…",
     fit: 8.5,
     fitReason: "Excellent size + under budget; parking/EV is bonus (not required). Building age TBD – newer preferred.",
     status: "new",
     nextAction: "Send inquiry / confirm exact building & floor plan",
-    userNotes: ""
+    userNotes: "",
+    notes: "Strong size and price. Confirm exact building and floor plan. Parking is a plus but not required."
   },
   {
     id: "my-brickell",
@@ -234,14 +143,19 @@ const defaultListings = [
     available: "Dec 31, 2026 (min 3 mo listed)",
     source: "Furnished Finder",
     link: "https://www.furnishedfinder.com/property/1003912_1",
-    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80",
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80",
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80"
+    ],
     amenities: "Washer/dryer, views, home office",
     buildingAmenities: "Rooftop pool, gym, spa, clubroom, concierge, Karim Rashid design, Metromover adjacent (newer 2013/14 building)",
     fit: 7.5,
     fitReason: "Newer building (2013/14) + prime location; size a bit under ideal, min stay check needed",
     status: "new",
     nextAction: "Confirm 2-month flex + exact unit photos/floor plan",
-    userNotes: ""
+    userNotes: "",
+    notes: "Modern 2013/14 Karim Rashid building. Strong amenities and location. Size is slightly under the 1200+ preference."
   },
   {
     id: "on-the-water",
@@ -256,14 +170,19 @@ const defaultListings = [
     available: "Oct 6, 2026 (recheck window)",
     source: "Furnished Finder",
     link: "https://www.furnishedfinder.com/property/362988_1",
-    img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80",
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80",
+      "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=1200&q=80"
+    ],
     amenities: "Ocean/bay views, private baths",
     buildingAmenities: "Researching…",
     fit: 7.5,
     fitReason: "Great size + value; calendar & stairs need verification. Building age unknown (newer preferred).",
     status: "new",
     nextAction: "Check Dec–Feb availability + building details",
-    userNotes: ""
+    userNotes: "",
+    notes: "Excellent value and size. Verify availability for the exact window and any stair access issues."
   },
   {
     id: "four-ambassadors",
@@ -278,152 +197,218 @@ const defaultListings = [
     available: "Short-term ok",
     source: "MLS / Haute Team",
     link: "https://www.hauteteam.com/property-search/detail/134/A12088174/801-brickell-bay-dr-miami-fl-33131/",
-    img: "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=800&q=80",
+    images: [
+      "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=1200&q=80",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80"
+    ],
     amenities: "Bay views, turnkey, utilities included",
     buildingAmenities: "2 Olympic pools, marina, spa, gym, restaurants, grocery, valet, 24h security (older 1960s complex)",
     fit: 5.5,
     fitReason: "Iconic location + amenities; size under preference, older building lowers fit",
     status: "new",
     nextAction: "Request current photos + confirm 2-month rate",
-    userNotes: ""
+    userNotes: "",
+    notes: "Iconic older building with strong amenities and location, but size and age lower the score."
+  },
+  {
+    id: "flow-brickell",
+    name: "Flow Brickell 2BR options",
+    building: "Flow Brickell",
+    address: "275 SW 6th St, Miami, FL 33130",
+    lat: 25.765, lng: -80.198,
+    size: "~1008–1340+ sq ft",
+    beds: "2BR / 2BA",
+    price: "~$5,100–5,800/mo furnished",
+    utilities: "Varies",
+    available: "Multiple units Dec 2026+",
+    source: "Flow / Suite Home",
+    link: "https://www.flow.life/en/properties/miami-brickell/",
+    images: [
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80",
+      "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=1200&q=80",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=1200&q=80"
+    ],
+    amenities: "Floor-to-ceiling windows, balcony, in-unit laundry, modern finishes",
+    buildingAmenities: "Brand new 2025 tower, large gym, cold plunges, sauna, pool, coworking, concierge, river views (newer preferred)",
+    fit: 8.0,
+    fitReason: "Brand-new building + strong amenities + flexible terms; confirm exact unit size/price under budget",
+    status: "new",
+    nextAction: "Check specific unit availability and furnished pricing for Dec–Feb",
+    userNotes: "",
+    notes: "Newest building on the shortlist. Flexible lease terms. Confirm exact furnished 2BR pricing and availability for the window."
+  },
+  {
+    id: "1060-brickell",
+    name: "1060 Brickell 2BR/2.5BA",
+    building: "1060 Brickell",
+    address: "1060 Brickell Ave, Miami, FL 33131",
+    lat: 25.760, lng: -80.192,
+    size: "1368 sq ft",
+    beds: "2BR / 2.5BA",
+    price: "$4,150/mo",
+    utilities: "Check",
+    available: "Check",
+    source: "MLS / Haute Team",
+    link: "https://www.hauteteam.com/property-search/detail/134/A12022746/1060-brickell-ave-miami-fl-33131/",
+    images: [
+      "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=1200&q=80",
+      "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=1200&q=80"
+    ],
+    amenities: "Furnished, balcony, modern",
+    buildingAmenities: "Resort-style pool, fitness, yoga, virtual golf, game room, 24h security, valet (2008 building)",
+    fit: 7.0,
+    fitReason: "Good size and amenities; confirm furnished short-term availability and exact pricing",
+    status: "new",
+    nextAction: "Confirm short-term rate and availability",
+    userNotes: "",
+    notes: "Solid size and building amenities. Need to confirm it works for a ~2-month furnished stay."
   }
 ];
 
-let data = defaultListings;
+let data = listings;
 try {
-  const stored = localStorage.getItem("brickellTrackerV4");
+  const stored = localStorage.getItem("brickellTrackerV5");
   if (stored) data = JSON.parse(stored);
 } catch (e) {}
 
 function save() {
-  try { localStorage.setItem("brickellTrackerV4", JSON.stringify(data)); } catch (e) {}
+  try { localStorage.setItem("brickellTrackerV5", JSON.stringify(data)); } catch (e) {}
 }
 
-function fitClass(f) {
-  return f >= 8 ? "fit-high" : f >= 6 ? "fit-med" : "fit-low";
-}
+function fitClass(f) { return f >= 8 ? "fit-high" : f >= 6 ? "fit-med" : "fit-low"; }
 
-function render() {
+function renderList() {
   const q = (document.getElementById("search")?.value || "").toLowerCase();
   const ff = document.getElementById("filterFit")?.value || "";
   const fs = document.getElementById("filterStatus")?.value || "";
-  const container = document.getElementById("listings");
-  container.innerHTML = "";
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
 
   const filtered = data.filter(l => {
-    const hay = (l.name + " " + (l.building||"") + " " + (l.amenities||"") + " " + (l.userNotes||"")).toLowerCase();
+    const hay = (l.name + " " + (l.building||"") + " " + (l.amenities||"")).toLowerCase();
     const matchQ = !q || hay.includes(q);
     const matchF = !ff || (ff === "high" && l.fit >= 8) || (ff === "med" && l.fit >= 6 && l.fit < 8) || (ff === "low" && l.fit < 6);
     const matchS = !fs || l.status === fs;
     return matchQ && matchF && matchS;
   }).sort((a, b) => b.fit - a.fit);
 
-  if (!filtered.length) {
-    container.innerHTML = '<div class="empty">No listings match the current filters.</div>';
-    return;
-  }
-
   filtered.forEach(l => {
     const card = document.createElement("div");
     card.className = "card";
+    card.onclick = () => showDetail(l.id);
     card.innerHTML = `
-      <div class="card-inner">
-        <div class="thumb">
-          <div class="fit-badge ${fitClass(l.fit)}">Fit ${l.fit}/10</div>
-          <img src="${l.img}" alt="${l.name}" onerror="this.style.display='none'; this.parentElement.style.background='#cbd5e1';">
-        </div>
-        <div class="content">
-          <div class="title-row">
-            <div>
-              <h3>${l.name}</h3>
-              <p class="sub">${l.building} · ${l.address}</p>
-            </div>
-            <div>
-              <div class="price">${l.price}</div>
-              <div class="size">${l.size}</div>
-            </div>
-          </div>
-          <div class="meta">
-            <div>Avail: ${l.available}</div>
-            <div>Source: ${l.source}</div>
-          </div>
-          <p class="notes"><strong>Unit:</strong> ${l.amenities}</p>
-          <p class="notes"><strong>Building:</strong> ${l.buildingAmenities}</p>
-          <p class="fit-reason">${l.fitReason}</p>
-          <div class="actions">
-            <a href="${l.link}" target="_blank">View listing →</a>
-            <select class="status-sel" data-id="${l.id}">
-              <option value="new" ${l.status==="new"?"selected":""}>New</option>
-              <option value="reached" ${l.status==="reached"?"selected":""}>Reached out</option>
-              <option value="responded" ${l.status==="responded"?"selected":""}>Got response</option>
-              <option value="tour" ${l.status==="tour"?"selected":""}>Tour</option>
-              <option value="rejected" ${l.status==="rejected"?"selected":""}>Rejected</option>
-              <option value="booked" ${l.status==="booked"?"selected":""}>Booked</option>
-            </select>
-          </div>
-          <input class="next-input next-action" data-id="${l.id}" placeholder="Next action…" value="${l.nextAction || ""}">
-          <textarea class="notes-input" data-id="${l.id}" placeholder="Your notes…">${l.userNotes || ""}</textarea>
-        </div>
+      <div class="gallery-row">
+        ${l.images.map(src => `<img src="${src}" alt="" onerror="this.style.display='none'">`).join("")}
+      </div>
+      <div class="card-body">
+        <span class="fit-badge ${fitClass(l.fit)}">Fit ${l.fit}/10</span>
+        <h3 style="margin:6px 0 2px; font-size:1.05rem;">${l.name}</h3>
+        <p style="margin:0; color:var(--muted); font-size:0.85rem;">${l.building} · ${l.size}</p>
+        <p class="price" style="margin:8px 0 0;">${l.price}</p>
+        <p style="margin:4px 0 0; font-size:0.8rem; color:var(--muted);">${l.available} · ${l.source}</p>
       </div>
     `;
-    container.appendChild(card);
-  });
-
-  document.querySelectorAll(".status-sel").forEach(el => {
-    el.onchange = e => {
-      const item = data.find(x => x.id === e.target.dataset.id);
-      if (item) { item.status = e.target.value; save(); }
-    };
-  });
-  document.querySelectorAll(".next-input").forEach(el => {
-    el.onchange = e => {
-      const item = data.find(x => x.id === e.target.dataset.id);
-      if (item) { item.nextAction = e.target.value; save(); }
-    };
-  });
-  document.querySelectorAll(".notes-input").forEach(el => {
-    el.onchange = e => {
-      const item = data.find(x => x.id === e.target.dataset.id);
-      if (item) { item.userNotes = e.target.value; save(); }
-    };
+    grid.appendChild(card);
   });
 }
 
-let map, markers = [];
-function initMap() {
-  if (map) return;
-  map = L.map("map").setView([25.763, -80.191], 15);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; OpenStreetMap'
-  }).addTo(map);
-  data.forEach(l => {
-    if (l.lat && l.lng) {
-      const m = L.marker([l.lat, l.lng]).addTo(map)
-        .bindPopup(`<b>${l.name}</b><br>${l.building}<br>Fit ${l.fit}/10 · ${l.price}<br><a href="${l.link}" target="_blank">View listing</a>`);
-      markers.push(m);
-    }
+function showDetail(id) {
+  document.getElementById("list-view").style.display = "none";
+  document.getElementById("detail-view").classList.add("active");
+  renderSidebar(id);
+  renderDetail(id);
+}
+
+function showList() {
+  document.getElementById("detail-view").classList.remove("active");
+  document.getElementById("list-view").style.display = "block";
+}
+
+function renderSidebar(currentId) {
+  const sidebar = document.getElementById("sidebar");
+  sidebar.innerHTML = `<button class="back-btn" onclick="showList()">← Back to all</button>`;
+  data.sort((a,b) => b.fit - a.fit).forEach(l => {
+    const item = document.createElement("div");
+    item.className = "sidebar-item" + (l.id === currentId ? " active" : "");
+    item.onclick = () => showDetail(l.id);
+    item.innerHTML = `
+      <img src="${l.images[0]}" alt="" onerror="this.style.display='none'">
+      <div>
+        <div style="font-size:0.85rem; font-weight:500;">${l.name}</div>
+        <div style="font-size:0.75rem; color:var(--muted);">Fit ${l.fit} · ${l.price}</div>
+      </div>
+    `;
+    sidebar.appendChild(item);
   });
 }
 
-document.querySelectorAll(".tab").forEach(btn => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById(btn.dataset.tab + "-panel").classList.add("active");
-    if (btn.dataset.tab === "map") {
-      setTimeout(() => {
-        initMap();
-        if (map) map.invalidateSize();
-      }, 50);
-    }
-  });
-});
+function renderDetail(id) {
+  const l = data.find(x => x.id === id);
+  if (!l) return;
+  const main = document.getElementById("main-detail");
+  main.innerHTML = `
+    <div class="full-gallery">
+      ${l.images.map(src => `<img src="${src}" alt="" onerror="this.style.display='none'">`).join("")}
+    </div>
+    <h2 style="margin:0 0 4px;">${l.name}</h2>
+    <p style="margin:0; color:var(--muted);">${l.building} · ${l.address}</p>
+    <div class="info-grid">
+      <div class="section">
+        <h3 style="margin-top:0;">Key facts</h3>
+        <p><strong>Price:</strong> ${l.price}</p>
+        <p><strong>Size:</strong> ${l.size} · ${l.beds}</p>
+        <p><strong>Available:</strong> ${l.available}</p>
+        <p><strong>Utilities:</strong> ${l.utilities}</p>
+        <p><strong>Source:</strong> ${l.source}</p>
+        <p><strong>Fit:</strong> ${l.fit}/10 — ${l.fitReason}</p>
+        <p><a href="${l.link}" target="_blank">View original listing →</a></p>
+      </div>
+      <div class="section">
+        <h3 style="margin-top:0;">Tracking</h3>
+        <label>Status</label>
+        <select class="status-sel" data-id="${l.id}" style="width:100%; margin-bottom:8px;">
+          <option value="new" ${l.status==="new"?"selected":""}>New</option>
+          <option value="reached" ${l.status==="reached"?"selected":""}>Reached out</option>
+          <option value="responded" ${l.status==="responded"?"selected":""}>Got response</option>
+          <option value="tour" ${l.status==="tour"?"selected":""}>Tour</option>
+          <option value="rejected" ${l.status==="rejected"?"selected":""}>Rejected</option>
+          <option value="booked" ${l.status==="booked"?"selected":""}>Booked</option>
+        </select>
+        <label>Next action</label>
+        <input class="next-input" data-id="${l.id}" value="${l.nextAction || ""}" style="width:100%; margin-bottom:8px;">
+        <label>Notes</label>
+        <textarea class="notes-input" data-id="${l.id}" rows="3" style="width:100%;">${l.userNotes || ""}</textarea>
+      </div>
+    </div>
+    <div class="section">
+      <h3 style="margin-top:0;">Unit amenities</h3>
+      <p>${l.amenities}</p>
+    </div>
+    <div class="section">
+      <h3 style="margin-top:0;">Building</h3>
+      <p>${l.buildingAmenities}</p>
+      <p>${l.notes}</p>
+    </div>
+  `;
 
-document.getElementById("search").addEventListener("input", render);
-document.getElementById("filterFit").addEventListener("change", render);
-document.getElementById("filterStatus").addEventListener("change", render);
-render();
+  main.querySelector(".status-sel").onchange = e => {
+    const item = data.find(x => x.id === e.target.dataset.id);
+    if (item) { item.status = e.target.value; save(); }
+  };
+  main.querySelector(".next-input").onchange = e => {
+    const item = data.find(x => x.id === e.target.dataset.id);
+    if (item) { item.nextAction = e.target.value; save(); }
+  };
+  main.querySelector(".notes-input").onchange = e => {
+    const item = data.find(x => x.id === e.target.dataset.id);
+    if (item) { item.userNotes = e.target.value; save(); }
+  };
+}
+
+document.getElementById("search").addEventListener("input", renderList);
+document.getElementById("filterFit").addEventListener("change", renderList);
+document.getElementById("filterStatus").addEventListener("change", renderList);
+renderList();
 </script>
 </body>
 </html>
