@@ -1,1 +1,508 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brickell 2BR Stay Tracker</title>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #fff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+    --blue: #2563eb;
+    --high: #d1fae5;
+    --high-text: #065f46;
+    --med: #fef3c7;
+    --med-text: #92400e;
+    --low: #fee2e2;
+    --low-text: #991b1b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
+  header h1 { font-size: 1.8rem; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .tags { margin: 12px 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 999px; background: #e2e8f0; }
+  .filters { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin: 16px 0; display: flex; flex-wrap: wrap; gap: 10px; }
+  .filters input, .filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.15s; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
+  .gallery-wrap { position: relative; height: 200px; overflow: hidden; }
+  .gallery-row { display: flex; height: 100%; transition: transform 0.3s; }
+  .gallery-row { width: 100%; } .gallery-row img { height: 100%; width: 100%; min-width: 100%; object-fit: cover; flex-shrink: 0; }
+  .arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 2; font-size: 1.2rem; }
+  .arrow.left { left: 8px; }
+  .arrow.right { right: 8px; }
+  .arrow:hover { background: rgba(0,0,0,0.7); }
+  .card-body { padding: 14px; }
+  .fit-badge { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-bottom: 6px; }
+  .fit-high { background: var(--high); color: var(--high-text); }
+  .fit-med { background: var(--med); color: var(--med-text); }
+  .fit-low { background: var(--low); color: var(--low-text); }
+  .price { font-weight: 700; font-size: 1.1rem; }
+  .detail-view { display: none; }
+  .detail-view.active { display: flex; min-height: calc(100vh - 80px); }
+  .sidebar { width: 280px; background: var(--card); border-right: 1px solid var(--border); overflow: hidden; padding: 12px; flex-shrink: 0; position: relative; }
+  .sidebar-inner { overflow-y: auto; height: calc(100% - 40px); }
+  .sidebar-arrows { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .sidebar-arrows button { background: #f1f5f9; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+  .sidebar-item { padding: 10px; border-radius: 8px; cursor: pointer; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
+  .sidebar-item:hover, .sidebar-item.active { background: #f1f5f9; }
+  .sidebar-item img { width: 56px; height: 42px; object-fit: cover; border-radius: 4px; }
+  .main { flex: 1; overflow-y: auto; padding: 20px; }
+  .full-gallery-wrap { position: relative; height: 420px; margin-bottom: 20px; overflow: hidden; }
+  .full-gallery { display: flex; height: 100%; transition: transform 0.3s; }
+  .full-gallery { width: 100%; } .full-gallery img { height: 100%; width: 100%; min-width: 100%; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .back-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-size: 0.95rem; margin-bottom: 12px; }
+  @media (max-width: 800px) {
+    .detail-view { flex-direction: column; }
+    .sidebar { width: 100%; max-height: 180px; border-right: none; border-bottom: 1px solid var(--border); }
+    .full-gallery { height: 280px; }
+    .full-gallery img { min-width: 320px; }
+    .info-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Brickell 2BR Stay Tracker</h1>
+    <p>Furnished 2-bedroom · mid-Dec 2026 → mid/late-Feb 2027 · 2 people · ≤ $5,500/mo · Prioritize location + size · Prefer newer buildings</p>
+    <div class="tags">
+      <span class="tag">Flexible dates</span>
+      <span class="tag">Parking not required</span>
+      <span class="tag">Newer buildings preferred</span>
+    </div>
+  </header>
+
+  <div id="list-view">
+    <div class="filters">
+      <input id="search" type="text" placeholder="Search…">
+      <select id="filterFit">
+        <option value="">All fit</option>
+        <option value="high">High ≥8</option>
+        <option value="med">Medium 6–7.9</option>
+        <option value="low">Low ≤5.9</option>
+      </select>
+      <select id="filterStatus">
+        <option value="">All status</option>
+        <option value="new">New</option>
+        <option value="reached">Reached out</option>
+        <option value="responded">Got response</option>
+        <option value="tour">Tour</option>
+        <option value="rejected">Rejected</option>
+        <option value="booked">Booked</option>
+      </select>
+    </div>
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <div id="detail-view" class="detail-view">
+    <div class="sidebar" id="sidebar"></div>
+    <div class="main" id="main-detail"></div>
+  </div>
+</div>
+
+<script>
+const listings = [
+  {
+    id: "ev-charger",
+    name: "Brickell 2/2 – EV Charger, Free Parking, Big Balcony",
+    building: "TBD (researching)",
+    address: "Brickell, Miami",
+    lat: 25.762, lng: -80.191,
+    size: "1400 sq ft",
+    beds: "2BR / 2BA",
+    price: "$4,995/mo",
+    utilities: "Included",
+    available: "Dec 12, 2026",
+    source: "Furnished Finder",
+    link: "https://www.furnishedfinder.com/property/956644_1",
+    images: [
+      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b",
+      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
+      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
+      "https://www.furnishedfinder.com/property/747397_1/opengraph-image/a0e5f164363f6bbc"
+    ],
+    amenities: "In-unit laundry, parking + EV, large balcony, workspace, sunrise views",
+    buildingAmenities: "Researching…",
+    fit: 8.5,
+    fitReason: "Excellent size + under budget; parking/EV is bonus (not required). Building age TBD – newer preferred.",
+    status: "new",
+    nextAction: "Send inquiry / confirm exact building & floor plan",
+    userNotes: "",
+    notes: "Strong size and price. Confirm exact building and floor plan. Parking is a plus but not required."
+  },
+  {
+    id: "my-brickell",
+    name: "Live the Brickell Lifestyle",
+    building: "My Brickell",
+    address: "31 SE 6th St, Miami, FL 33131",
+    lat: 25.7665, lng: -80.1925,
+    size: "1100 sq ft",
+    beds: "2BR / 2BA",
+    price: "$4,300/mo",
+    utilities: "Included",
+    available: "Dec 31, 2026 (min 3 mo listed)",
+    source: "Furnished Finder",
+    link: "https://www.furnishedfinder.com/property/1003912_1",
+    images: [
+      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
+      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b",
+      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23"
+    ],
+    amenities: "Washer/dryer, views, home office",
+    buildingAmenities: "Rooftop pool, gym, spa, clubroom, concierge, Karim Rashid design, Metromover adjacent (newer 2013/14 building)",
+    fit: 7.5,
+    fitReason: "Newer building (2013/14) + prime location; size a bit under ideal, min stay check needed",
+    status: "new",
+    nextAction: "Confirm 2-month flex + exact unit photos/floor plan",
+    userNotes: "",
+    notes: "Modern 2013/14 Karim Rashid building. Strong amenities and location. Size is slightly under the 1200+ preference."
+  },
+  {
+    id: "on-the-water" /* size boosted */,
+    name: "Brickell 2/2 On The Water",
+    building: "TBD",
+    address: "Brickell (quiet side)",
+    lat: 25.758, lng: -80.193,
+    size: "1200 sq ft",
+    beds: "2BR / 2BA",
+    price: "$2,900/mo",
+    utilities: "Included",
+    available: "Oct 6, 2026 (recheck window)",
+    source: "Furnished Finder",
+    link: "https://www.furnishedfinder.com/property/362988_1",
+    images: [
+      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
+      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b",
+      "https://www.furnishedfinder.com/property/747397_1/opengraph-image/a0e5f164363f6bbc"
+    ],
+    amenities: "Ocean/bay views, private baths",
+    buildingAmenities: "Researching…",
+    fit: 7.5,
+    fitReason: "Great size + value; calendar & stairs need verification. Building age unknown (newer preferred).",
+    status: "new",
+    nextAction: "Check Dec–Feb availability + building details",
+    userNotes: "",
+    notes: "Excellent value and size. Verify availability for the exact window and any stair access issues."
+  },
+  {
+    id: "four-ambassadors",
+    name: "Furnished 2BR/2BA · The Four Ambassadors",
+    building: "The Four Ambassadors",
+    address: "801 Brickell Bay Dr, Miami, FL 33131",
+    lat: 25.7628, lng: -80.1868,
+    size: "990 sq ft",
+    beds: "2BR / 2BA",
+    price: "$3,950/mo",
+    utilities: "Included",
+    available: "Short-term ok",
+    source: "MLS / Haute Team",
+    link: "https://www.hauteteam.com/property-search/detail/134/A12088174/801-brickell-bay-dr-miami-fl-33131/",
+    images: [
+      "https://www.furnishedfinder.com/property/747397_1/opengraph-image/a0e5f164363f6bbc",
+      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23"
+    ],
+    amenities: "Bay views, turnkey, utilities included",
+    buildingAmenities: "2 Olympic pools, marina, spa, gym, restaurants, grocery, valet, 24h security (older 1960s complex)",
+    fit: 5.5,
+    fitReason: "Iconic location + amenities; size under preference, older building lowers fit",
+    status: "new",
+    nextAction: "Request current photos + confirm 2-month rate",
+    userNotes: "",
+    notes: "Iconic older building with strong amenities and location, but size and age lower the score."
+  },
+  {
+    id: "flow-brickell",
+    name: "Flow Brickell 2BR options",
+    building: "Flow Brickell",
+    address: "275 SW 6th St, Miami, FL 33130",
+    lat: 25.765, lng: -80.198,
+    size: "~1008–1340+ sq ft",
+    beds: "2BR / 2BA",
+    price: "~$5,100–5,800/mo furnished",
+    utilities: "Varies",
+    available: "Multiple units Dec 2026+",
+    source: "Flow / Suite Home",
+    link: "https://www.flow.life/en/properties/miami-brickell/",
+    images: [
+      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b",
+      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
+      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23"
+    ],
+    amenities: "Floor-to-ceiling windows, balcony, in-unit laundry, modern finishes",
+    buildingAmenities: "Brand new 2025 tower, large gym, cold plunges, sauna, pool, coworking, concierge, river views (newer preferred)",
+    fit: 8.0,
+    fitReason: "Brand-new building + strong amenities + flexible terms; confirm exact unit size/price under budget",
+    status: "new",
+    nextAction: "Check specific unit availability and furnished pricing for Dec–Feb",
+    userNotes: "",
+    notes: "Newest building on the shortlist. Flexible lease terms. Confirm exact furnished 2BR pricing and availability for the window."
+  },
+  {
+    id: "1060-brickell",
+    name: "1060 Brickell 2BR/2.5BA",
+    building: "1060 Brickell",
+    address: "1060 Brickell Ave, Miami, FL 33131",
+    lat: 25.760, lng: -80.192,
+    size: "1368 sq ft",
+    beds: "2BR / 2.5BA",
+    price: "$4,150/mo",
+    utilities: "Check",
+    available: "Check",
+    source: "MLS / Haute Team",
+    link: "https://www.hauteteam.com/property-search/detail/134/A12022746/1060-brickell-ave-miami-fl-33131/",
+    images: [
+      "https://www.furnishedfinder.com/property/747397_1/opengraph-image/a0e5f164363f6bbc",
+      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b"
+    ],
+    amenities: "Furnished, balcony, modern",
+    buildingAmenities: "Resort-style pool, fitness, yoga, virtual golf, game room, 24h security, valet (2008 building)",
+    fit: 7.0,
+    fitReason: "Good size and amenities; confirm furnished short-term availability and exact pricing",
+    status: "new",
+    nextAction: "Confirm short-term rate and availability",
+    userNotes: "",
+    notes: "Solid size and building amenities. Need to confirm it works for a ~2-month furnished stay."
+  },
+  {
+    id: "airbnb-bay",
+    name: "Brickell 2BR + Den | Bay Views",
+    building: "TBD",
+    address: "Brickell",
+    lat: 25.764, lng: -80.190,
+    size: "~1200+ sq ft",
+    beds: "2BR / 2BA + den",
+    price: "Monthly rate TBD",
+    utilities: "Check",
+    available: "Check Dec–Feb",
+    source: "Airbnb",
+    link: "https://www.airbnb.com/rooms/1582707058258979282",
+    images: [
+      "https://a0.muscache.com/im/pictures/hosting/Hosting-1582707058258979282/original/b700078d-58fd-449c-85f2-e622d8358f4f.png"
+    ],
+    amenities: "Bay views, free parking, pool, gym",
+    buildingAmenities: "Resort-style",
+    fit: 7.5,
+    fitReason: "Real Airbnb with bay views. Confirm monthly rate and exact size.",
+    status: "new",
+    nextAction: "Check monthly pricing for Dec–Feb",
+    userNotes: "",
+    notes: "High-rated Airbnb option with real listing photo."
+  },
+  {
+    id: "craigslist-brickellhouse",
+    name: "Brickell House 2BR",
+    building: "Brickell House",
+    address: "Brickell",
+    lat: 25.767, lng: -80.193,
+    size: "1000 sq ft",
+    beds: "2BR / 2BA",
+    price: "$5,200/mo",
+    utilities: "Check",
+    available: "Recent listing",
+    source: "Craigslist",
+    link: "https://miami.craigslist.org/mdc/apa/d/miami-brickell-house-great-layout-for/rfCxyd5vi4USB5zogfo3Hp",
+    images: [
+      "https://images.craigslist.org/00E0E_4EgQQTVj3exz_0pO0jm_600x450.jpg"
+    ],
+    amenities: "Furnished option, modern",
+    buildingAmenities: "Lap pool, spa, fitness (Sieger Suarez)",
+    fit: 6.8,
+    fitReason: "Within budget, real CL photos. Size at 1000 threshold.",
+    status: "new",
+    nextAction: "Confirm furnished short-term availability",
+    userNotes: "",
+    notes: "Recent Craigslist listing with real photos."
+  }
+];
+
+let data = listings;
+try {
+  const stored = localStorage.getItem("brickellTrackerV5");
+  if (stored) data = JSON.parse(stored);
+} catch (e) {}
+
+function save() {
+  try { localStorage.setItem("brickellTrackerV5", JSON.stringify(data)); } catch (e) {}
+}
+
+function fitClass(f) { return f >= 8 ? "fit-high" : f >= 6 ? "fit-med" : "fit-low"; }
+
+function renderList() {
+  const q = (document.getElementById("search")?.value || "").toLowerCase();
+  const ff = document.getElementById("filterFit")?.value || "";
+  const fs = document.getElementById("filterStatus")?.value || "";
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  const filtered = data.filter(l => {
+    const hay = (l.name + " " + (l.building||"") + " " + (l.amenities||"")).toLowerCase();
+    const matchQ = !q || hay.includes(q);
+    const matchF = !ff || (ff === "high" && l.fit >= 8) || (ff === "med" && l.fit >= 6 && l.fit < 8) || (ff === "low" && l.fit < 6);
+    const matchS = !fs || l.status === fs;
+    return matchQ && matchF && matchS;
+  }).sort((a, b) => b.fit - a.fit);
+
+  filtered.forEach(l => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.onclick = () => showDetail(l.id);
+    const gid = "g" + l.id;
+    card.innerHTML = `
+      <div class="gallery-wrap" id="${gid}">
+        <button class="arrow left" onclick="event.stopPropagation(); slide('${gid}', -1)">‹</button>
+        <div class="gallery-row">
+          ${l.images.map(src => `<img src="${src}" alt="" onerror="this.style.display='none'">`).join("")}
+        </div>
+        <button class="arrow right" onclick="event.stopPropagation(); slide('${gid}', 1)">›</button>
+      </div>
+      <div class="card-body">
+        <span class="fit-badge ${fitClass(l.fit)}">Fit ${l.fit}/10</span>
+        <h3 style="margin:6px 0 2px; font-size:1.05rem;">${l.name}</h3>
+        <p style="margin:0; color:var(--muted); font-size:0.85rem;">${l.building} · ${l.size}</p>
+        <p class="price" style="margin:8px 0 0;">${l.price}</p>
+        <p style="margin:4px 0 0; font-size:0.8rem; color:var(--muted);">${l.available} · ${l.source}</p>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function showDetail(id) {
+  document.getElementById("list-view").style.display = "none";
+  document.getElementById("detail-view").classList.add("active");
+  renderSidebar(id);
+  renderDetail(id);
+}
+
+
+function scrollSidebar(dir) {
+  const inner = document.getElementById("sidebar-inner");
+  if (inner) inner.scrollBy({ top: dir * 80, behavior: "smooth" });
+}
+function showList() {
+  document.getElementById("detail-view").classList.remove("active");
+  document.getElementById("list-view").style.display = "block";
+}
+
+function renderSidebar(currentId) {
+  const sidebar = document.getElementById("sidebar");
+  sidebar.innerHTML = `
+    <div class="sidebar-arrows">
+      <button onclick="scrollSidebar(-1)">↑</button>
+      <button class="back-btn" onclick="showList()" style="margin:0;">← All</button>
+      <button onclick="scrollSidebar(1)">↓</button>
+    </div>
+    <div class="sidebar-inner" id="sidebar-inner"></div>
+  `;
+  const inner = document.getElementById("sidebar-inner");
+  data.sort((a,b) => b.fit - a.fit).forEach(l => {
+    const item = document.createElement("div");
+    item.className = "sidebar-item" + (l.id === currentId ? " active" : "");
+    item.onclick = () => showDetail(l.id);
+    item.innerHTML = `
+      <img src="${l.images[0]}" alt="" onerror="this.style.display='none'">
+      <div>
+        <div style="font-size:0.85rem; font-weight:500;">${l.name}</div>
+        <div style="font-size:0.75rem; color:var(--muted);">Fit ${l.fit} · ${l.price}</div>
+      </div>
+    `;
+    inner.appendChild(item);
+  });
+}
+
+function renderDetail(id) {
+  const l = data.find(x => x.id === id);
+  if (!l) return;
+  const main = document.getElementById("main-detail");
+  main.innerHTML = `
+    <div class="full-gallery-wrap" id="full-${l.id}">
+      <button class="arrow left" onclick="slide('full-${l.id}', -1)">‹</button>
+      <div class="full-gallery">
+        ${l.images.map(src => `<img src="${src}" alt="" onerror="this.style.display='none'">`).join("")}
+      </div>
+      <button class="arrow right" onclick="slide('full-${l.id}', 1)">›</button>
+    </div>
+    <h2 style="margin:0 0 4px;">${l.name}</h2>
+    <p style="margin:0; color:var(--muted);">${l.building} · ${l.address}</p>
+    <div class="info-grid">
+      <div class="section">
+        <h3 style="margin-top:0;">Key facts</h3>
+        <p><strong>Price:</strong> ${l.price}</p>
+        <p><strong>Size:</strong> ${l.size} · ${l.beds}</p>
+        <p><strong>Available:</strong> ${l.available}</p>
+        <p><strong>Utilities:</strong> ${l.utilities}</p>
+        <p><strong>Source:</strong> ${l.source}</p>
+        <p><strong>Fit:</strong> ${l.fit}/10 — ${l.fitReason}</p>
+        <p><a href="${l.link}" target="_blank">View original listing →</a></p>
+      </div>
+      <div class="section">
+        <h3 style="margin-top:0;">Tracking</h3>
+        <label>Status</label>
+        <select class="status-sel" data-id="${l.id}" style="width:100%; margin-bottom:8px;">
+          <option value="new" ${l.status==="new"?"selected":""}>New</option>
+          <option value="reached" ${l.status==="reached"?"selected":""}>Reached out</option>
+          <option value="responded" ${l.status==="responded"?"selected":""}>Got response</option>
+          <option value="tour" ${l.status==="tour"?"selected":""}>Tour</option>
+          <option value="rejected" ${l.status==="rejected"?"selected":""}>Rejected</option>
+          <option value="booked" ${l.status==="booked"?"selected":""}>Booked</option>
+        </select>
+        <label>Next action</label>
+        <input class="next-input" data-id="${l.id}" value="${l.nextAction || ""}" style="width:100%; margin-bottom:8px;">
+        <label>Notes</label>
+        <textarea class="notes-input" data-id="${l.id}" rows="3" style="width:100%;">${l.userNotes || ""}</textarea>
+      </div>
+    </div>
+    <div class="section">
+      <h3 style="margin-top:0;">Unit amenities</h3>
+      <p>${l.amenities}</p>
+    </div>
+    <div class="section">
+      <h3 style="margin-top:0;">Building</h3>
+      <p>${l.buildingAmenities}</p>
+      <p>${l.notes}</p>
+    </div>
+  `;
+
+  main.querySelector(".status-sel").onchange = e => {
+    const item = data.find(x => x.id === e.target.dataset.id);
+    if (item) { item.status = e.target.value; save(); }
+  };
+  main.querySelector(".next-input").onchange = e => {
+    const item = data.find(x => x.id === e.target.dataset.id);
+    if (item) { item.nextAction = e.target.value; save(); }
+  };
+  main.querySelector(".notes-input").onchange = e => {
+    const item = data.find(x => x.id === e.target.dataset.id);
+    if (item) { item.userNotes = e.target.value; save(); }
+  };
+}
+
+
+let slideIndex = {};
+function slide(id, dir) {
+  const wrap = document.getElementById(id);
+  if (!wrap) return;
+  const row = wrap.querySelector(".gallery-row, .full-gallery");
+  if (!row) return;
+  const imgs = row.querySelectorAll("img");
+  if (!imgs.length) return;
+  if (!slideIndex[id]) slideIndex[id] = 0;
+  slideIndex[id] = (slideIndex[id] + dir + imgs.length) % imgs.length;
+  row.style.transform = `translateX(-${slideIndex[id] * 100}%)`;
+}
+document.getElementById("search").addEventListener("input", renderList);
+document.getElementById("filterFit").addEventListener("change", renderList);
+document.getElementById("filterStatus").addEventListener("change", renderList);
+renderList();
+</script>
+</body>
+</html>
