@@ -2,506 +2,352 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Brickell 2BR Stay Tracker</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-  :root {
-    --bg: #f8fafc;
-    --card: #fff;
-    --border: #e2e8f0;
-    --text: #0f172a;
-    --muted: #64748b;
-    --blue: #2563eb;
-    --high: #d1fae5;
-    --high-text: #065f46;
-    --med: #fef3c7;
-    --med-text: #92400e;
-    --low: #fee2e2;
-    --low-text: #991b1b;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); }
-  .wrap { max-width: 1200px; margin: 0 auto; padding: 20px 16px; }
-  header h1 { font-size: 1.8rem; margin: 0 0 4px; }
-  header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
-  .tags { margin: 12px 0; display: flex; flex-wrap: wrap; gap: 8px; }
-  .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 999px; background: #e2e8f0; }
-  .filters { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; margin: 16px 0; display: flex; flex-wrap: wrap; gap: 10px; }
-  .filters input, .filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.9rem; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; }
-  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; cursor: pointer; transition: transform 0.15s; }
-  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
-  .gallery-wrap { position: relative; height: 200px; overflow: hidden; }
-  .gallery-row { display: flex; height: 100%; transition: transform 0.3s; }
-  .gallery-row { width: 100%; } .gallery-row img { height: 100%; width: 100%; min-width: 100%; object-fit: cover; flex-shrink: 0; }
-  .arrow { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: white; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; z-index: 2; font-size: 1.2rem; }
-  .arrow.left { left: 8px; }
-  .arrow.right { right: 8px; }
-  .arrow:hover { background: rgba(0,0,0,0.7); }
-  .card-body { padding: 14px; }
-  .fit-badge { display: inline-block; font-size: 0.7rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-bottom: 6px; }
-  .fit-high { background: var(--high); color: var(--high-text); }
-  .fit-med { background: var(--med); color: var(--med-text); }
-  .fit-low { background: var(--low); color: var(--low-text); }
-  .price { font-weight: 700; font-size: 1.1rem; }
-  .detail-view { display: none; }
-  .detail-view.active { display: flex; min-height: calc(100vh - 80px); }
-  .sidebar { width: 280px; background: var(--card); border-right: 1px solid var(--border); overflow: hidden; padding: 12px; flex-shrink: 0; position: relative; }
-  .sidebar-inner { overflow-y: auto; height: calc(100% - 40px); }
-  .sidebar-arrows { display: flex; justify-content: space-between; margin-bottom: 8px; }
-  .sidebar-arrows button { background: #f1f5f9; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
-  .sidebar-item { padding: 10px; border-radius: 8px; cursor: pointer; margin-bottom: 6px; display: flex; gap: 8px; align-items: center; }
-  .sidebar-item:hover, .sidebar-item.active { background: #f1f5f9; }
-  .sidebar-item img { width: 56px; height: 42px; object-fit: cover; border-radius: 4px; }
-  .main { flex: 1; overflow-y: auto; padding: 20px; }
-  .full-gallery-wrap { position: relative; height: 420px; margin-bottom: 20px; overflow: hidden; }
-  .full-gallery { display: flex; height: 100%; transition: transform 0.3s; }
-  .full-gallery { width: 100%; } .full-gallery img { height: 100%; width: 100%; min-width: 100%; object-fit: cover; border-radius: 8px; flex-shrink: 0; }
-  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
-  .section { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-  .back-btn { background: none; border: none; color: var(--blue); cursor: pointer; font-size: 0.95rem; margin-bottom: 12px; }
-  @media (max-width: 800px) {
-    .detail-view { flex-direction: column; }
-    .sidebar { width: 100%; max-height: 180px; border-right: none; border-bottom: 1px solid var(--border); }
-    .full-gallery { height: 280px; }
-    .full-gallery img { min-width: 320px; }
-    .info-grid { grid-template-columns: 1fr; }
-  }
+:root { --bg:#f4f5f7; --card:#fff; --line:#e4e7ee; --ink:#14161c; --muted:#5c6570; --blue:#1d4ed8; --hi:#dcfce7; --hi-t:#166534; --mid:#fef3c7; --mid-t:#92400e; --lo:#fee2e2; --lo-t:#991b1b; }
+* { box-sizing:border-box; }
+body { margin:0; font:15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background:var(--bg); color:var(--ink); }
+button, input, select, textarea { font:inherit; }
+a { color:var(--blue); }
+.wrap { max-width:1180px; margin:0 auto; padding:20px 16px 64px; }
+header h1 { margin:0 0 4px; font-size:1.6rem; letter-spacing:-.02em; }
+header p { margin:0; color:var(--muted); }
+.meta { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 0; }
+.pill { font-size:.75rem; background:#eceff3; border-radius:999px; padding:4px 10px; }
+.tabs { display:flex; gap:8px; margin:16px 0; }
+.tabs button, .filters select, .filters input { border:1px solid var(--line); background:#fff; border-radius:999px; padding:6px 14px; }
+.tabs button { cursor:pointer; }
+.tabs button.on { background:var(--ink); color:#fff; border-color:var(--ink); }
+.filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+.filters input, .filters select { border-radius:8px; padding:8px 10px; }
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(320px,1fr)); gap:14px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:14px; overflow:hidden; cursor:pointer; }
+.card:hover { box-shadow:0 8px 24px rgba(16,24,40,.08); }
+.stage { position:relative; height:220px; background:#111; }
+.stage img { width:100%; height:100%; object-fit:cover; display:block; background:#111; }
+.nav { position:absolute; top:50%; transform:translateY(-50%); width:34px; height:34px; border:0; border-radius:50%; background:rgba(0,0,0,.55); color:#fff; cursor:pointer; font-size:20px; line-height:1; }
+.nav.prev { left:8px; } .nav.next { right:8px; }
+.count { position:absolute; left:10px; bottom:8px; background:rgba(0,0,0,.6); color:#fff; font-size:.72rem; padding:2px 7px; border-radius:999px; }
+.body { padding:12px 14px 14px; }
+.fit { display:inline-block; font-size:.72rem; font-weight:650; padding:2px 8px; border-radius:999px; }
+.fit.hi { background:var(--hi); color:var(--hi-t); }
+.fit.mid { background:var(--mid); color:var(--mid-t); }
+.fit.lo { background:var(--lo); color:var(--lo-t); }
+.name { margin:6px 0 2px; font-size:1.02rem; }
+.sub, .fine { margin:0; color:var(--muted); font-size:.84rem; }
+.price { margin:8px 0 0; font-weight:700; }
+#map { height:70vh; border-radius:14px; border:1px solid var(--line); }
+.detail { display:none; }
+.detail.on { display:grid; grid-template-columns:280px 1fr; min-height:100vh; }
+.side { background:#fff; border-right:1px solid var(--line); padding:10px; }
+.side-tools { display:flex; gap:6px; align-items:center; margin-bottom:8px; }
+.side-tools button { border:1px solid var(--line); background:#f4f6f8; border-radius:8px; padding:4px 10px; cursor:pointer; }
+.side-list { max-height:calc(100vh - 70px); overflow:auto; }
+.side-item { display:flex; gap:8px; padding:8px; border-radius:10px; cursor:pointer; }
+.side-item.on, .side-item:hover { background:#f3f5f8; }
+.side-item img { width:72px; height:54px; object-fit:cover; border-radius:6px; background:#eee; flex:none; }
+.side-item strong { display:block; font-size:.8rem; font-weight:600; }
+.side-item span { color:var(--muted); font-size:.72rem; }
+.main { padding:16px 18px 48px; max-width:980px; }
+.hero { position:relative; height:min(68vh, 560px); background:#111; border-radius:14px; overflow:hidden; }
+.hero .stage { height:100%; }
+.hero img { object-fit:contain; }
+.facts { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+.panel { background:#fff; border:1px solid var(--line); border-radius:12px; padding:14px; }
+.panel h3 { margin:0 0 8px; font-size:.95rem; }
+.kv { display:grid; grid-template-columns:128px 1fr; gap:4px 8px; margin:0; }
+.kv dt { color:var(--muted); }
+.kv dd { margin:0; }
+.group { margin:0 0 10px; }
+.group b { display:block; font-size:.75rem; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.chips { display:flex; flex-wrap:wrap; gap:6px; }
+.chips span { background:#f3f5f8; border-radius:999px; padding:4px 8px; font-size:.78rem; }
+.notes { margin:0; padding-left:18px; }
+.notes li { margin:4px 0; }
+.desc { white-space:pre-wrap; }
+label { display:block; font-size:.78rem; color:var(--muted); margin:8px 0 4px; }
+select, input[type=text], textarea { width:100%; border:1px solid var(--line); border-radius:8px; padding:8px; background:#fff; }
+.back { border:0; background:none; color:var(--blue); cursor:pointer; padding:0 0 10px; }
+.audit { margin-top:28px; color:var(--muted); font-size:.84rem; }
+.audit ul { margin:8px 0 0; padding-left:18px; }
+@media (max-width:800px) {
+  .detail.on { grid-template-columns:1fr; }
+  .side-list { max-height:180px; }
+  .facts { grid-template-columns:1fr; }
+  .hero { height:300px; }
+}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="app" class="wrap">
   <header>
-    <h1>Brickell 2BR Stay Tracker</h1>
-    <p>Furnished 2-bedroom · mid-Dec 2026 → mid/late-Feb 2027 · 2 people · ≤ $5,500/mo · Prioritize location + size · Prefer newer buildings</p>
-    <div class="tags">
-      <span class="tag">Flexible dates</span>
-      <span class="tag">Parking not required</span>
-      <span class="tag">Newer buildings preferred</span>
+    <h1>Brickell 2BR stay tracker</h1>
+    <p>Mid-Dec 2026 to mid/late Feb 2027 · two people · $5,500/mo or less · 1,000+ sq ft · short stays only</p>
+    <div class="meta">
+      <span class="pill">Each gallery is only that listing</span>
+      <span class="pill">No logos or stock</span>
+      <span class="pill">Parking not scored</span>
+      <span class="pill" id="count"></span>
     </div>
   </header>
-
+  <div class="tabs">
+    <button id="tab-list" class="on" type="button">Listings</button>
+    <button id="tab-map" type="button">Map</button>
+  </div>
   <div id="list-view">
     <div class="filters">
-      <input id="search" type="text" placeholder="Search…">
-      <select id="filterFit">
-        <option value="">All fit</option>
-        <option value="high">High ≥8</option>
-        <option value="med">Medium 6–7.9</option>
-        <option value="low">Low ≤5.9</option>
-      </select>
-      <select id="filterStatus">
-        <option value="">All status</option>
-        <option value="new">New</option>
-        <option value="reached">Reached out</option>
-        <option value="responded">Got response</option>
-        <option value="tour">Tour</option>
-        <option value="rejected">Rejected</option>
-        <option value="booked">Booked</option>
-      </select>
+      <input id="q" type="search" placeholder="Search name, building, area">
+      <select id="fit"><option value="">All fit</option><option value="hi">High ≥ 7</option><option value="mid">Medium 5–6.9</option><option value="lo">Low < 5</option></select>
+      <select id="src"><option value="">All sources</option></select>
+      <select id="st"><option value="">All status</option><option>New</option><option>Reached out</option><option>Got response</option><option>Tour</option><option>Rejected</option><option>Booked</option></select>
     </div>
     <div id="grid" class="grid"></div>
+    <section class="audit">
+      <strong>What was left off, and why</strong>
+      <ul>
+        <li>1060 Brickell #2201 (MLS A12022746, $4,150, 1,368 sq ft) says long-term only and no Airbnb. The old card was using Furnished Finder logo images from other listings, so it is gone.</li>
+        <li>The Furnished Finder ad that quoted a lower rent and then $6,000 (listing 681540) is ignored, as you asked.</li>
+        <li>Units under 1,000 sq ft, over $5,500, outside Brickell, or with a minimum stay over 90 nights are not listed.</li>
+        <li>Flow Brickell furnished pricing was over budget. Craigslist and other landlord pages are not here unless every photo could be tied to that exact listing.</li>
+      </ul>
+    </section>
   </div>
-
-  <div id="detail-view" class="detail-view">
-    <div class="sidebar" id="sidebar"></div>
-    <div class="main" id="main-detail"></div>
-  </div>
+  <div id="map-view" hidden><div id="map"></div></div>
 </div>
-
+<div id="detail" class="detail">
+  <aside class="side">
+    <div class="side-tools">
+      <button type="button" id="prev-listing" aria-label="Previous listing">‹</button>
+      <button type="button" id="back">All</button>
+      <button type="button" id="next-listing" aria-label="Next listing">›</button>
+    </div>
+    <div id="side-list" class="side-list"></div>
+  </aside>
+  <div id="main" class="main"></div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const listings = [
-  {
-    id: "ev-charger",
-    name: "Brickell 2/2 – EV Charger, Free Parking, Big Balcony",
-    building: "TBD (researching)",
-    address: "Brickell, Miami",
-    lat: 25.762, lng: -80.191,
-    size: "1400 sq ft",
-    beds: "2BR / 2BA",
-    price: "$4,995/mo",
-    utilities: "Included",
-    available: "Dec 12, 2026",
-    source: "Furnished Finder",
-    link: "https://www.furnishedfinder.com/property/956644_1",
-    images: [
-      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b",
-      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
-      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
-      "https://www.furnishedfinder.com/property/747397_1/opengraph-image/a0e5f164363f6bbc"
-    ],
-    amenities: "In-unit laundry, parking + EV, large balcony, workspace, sunrise views",
-    buildingAmenities: "Researching…",
-    fit: 8.5,
-    fitReason: "Excellent size + under budget; parking/EV is bonus (not required). Building age TBD – newer preferred.",
-    status: "new",
-    nextAction: "Send inquiry / confirm exact building & floor plan",
-    userNotes: "",
-    notes: "Strong size and price. Confirm exact building and floor plan. Parking is a plus but not required."
-  },
-  {
-    id: "my-brickell",
-    name: "Live the Brickell Lifestyle",
-    building: "My Brickell",
-    address: "31 SE 6th St, Miami, FL 33131",
-    lat: 25.7665, lng: -80.1925,
-    size: "1100 sq ft",
-    beds: "2BR / 2BA",
-    price: "$4,300/mo",
-    utilities: "Included",
-    available: "Dec 31, 2026 (min 3 mo listed)",
-    source: "Furnished Finder",
-    link: "https://www.furnishedfinder.com/property/1003912_1",
-    images: [
-      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
-      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b",
-      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23"
-    ],
-    amenities: "Washer/dryer, views, home office",
-    buildingAmenities: "Rooftop pool, gym, spa, clubroom, concierge, Karim Rashid design, Metromover adjacent (newer 2013/14 building)",
-    fit: 7.5,
-    fitReason: "Newer building (2013/14) + prime location; size a bit under ideal, min stay check needed",
-    status: "new",
-    nextAction: "Confirm 2-month flex + exact unit photos/floor plan",
-    userNotes: "",
-    notes: "Modern 2013/14 Karim Rashid building. Strong amenities and location. Size is slightly under the 1200+ preference."
-  },
-  {
-    id: "on-the-water" /* size boosted */,
-    name: "Brickell 2/2 On The Water",
-    building: "TBD",
-    address: "Brickell (quiet side)",
-    lat: 25.758, lng: -80.193,
-    size: "1200 sq ft",
-    beds: "2BR / 2BA",
-    price: "$2,900/mo",
-    utilities: "Included",
-    available: "Oct 6, 2026 (recheck window)",
-    source: "Furnished Finder",
-    link: "https://www.furnishedfinder.com/property/362988_1",
-    images: [
-      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
-      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b",
-      "https://www.furnishedfinder.com/property/747397_1/opengraph-image/a0e5f164363f6bbc"
-    ],
-    amenities: "Ocean/bay views, private baths",
-    buildingAmenities: "Researching…",
-    fit: 7.5,
-    fitReason: "Great size + value; calendar & stairs need verification. Building age unknown (newer preferred).",
-    status: "new",
-    nextAction: "Check Dec–Feb availability + building details",
-    userNotes: "",
-    notes: "Excellent value and size. Verify availability for the exact window and any stair access issues."
-  },
-  {
-    id: "four-ambassadors",
-    name: "Furnished 2BR/2BA · The Four Ambassadors",
-    building: "The Four Ambassadors",
-    address: "801 Brickell Bay Dr, Miami, FL 33131",
-    lat: 25.7628, lng: -80.1868,
-    size: "990 sq ft",
-    beds: "2BR / 2BA",
-    price: "$3,950/mo",
-    utilities: "Included",
-    available: "Short-term ok",
-    source: "MLS / Haute Team",
-    link: "https://www.hauteteam.com/property-search/detail/134/A12088174/801-brickell-bay-dr-miami-fl-33131/",
-    images: [
-      "https://www.furnishedfinder.com/property/747397_1/opengraph-image/a0e5f164363f6bbc",
-      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23"
-    ],
-    amenities: "Bay views, turnkey, utilities included",
-    buildingAmenities: "2 Olympic pools, marina, spa, gym, restaurants, grocery, valet, 24h security (older 1960s complex)",
-    fit: 5.5,
-    fitReason: "Iconic location + amenities; size under preference, older building lowers fit",
-    status: "new",
-    nextAction: "Request current photos + confirm 2-month rate",
-    userNotes: "",
-    notes: "Iconic older building with strong amenities and location, but size and age lower the score."
-  },
-  {
-    id: "flow-brickell",
-    name: "Flow Brickell 2BR options",
-    building: "Flow Brickell",
-    address: "275 SW 6th St, Miami, FL 33130",
-    lat: 25.765, lng: -80.198,
-    size: "~1008–1340+ sq ft",
-    beds: "2BR / 2BA",
-    price: "~$5,100–5,800/mo furnished",
-    utilities: "Varies",
-    available: "Multiple units Dec 2026+",
-    source: "Flow / Suite Home",
-    link: "https://www.flow.life/en/properties/miami-brickell/",
-    images: [
-      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b",
-      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23",
-      "https://www.furnishedfinder.com/property/362988_1/opengraph-image/c46e59ea8ba8bf23"
-    ],
-    amenities: "Floor-to-ceiling windows, balcony, in-unit laundry, modern finishes",
-    buildingAmenities: "Brand new 2025 tower, large gym, cold plunges, sauna, pool, coworking, concierge, river views (newer preferred)",
-    fit: 8.0,
-    fitReason: "Brand-new building + strong amenities + flexible terms; confirm exact unit size/price under budget",
-    status: "new",
-    nextAction: "Check specific unit availability and furnished pricing for Dec–Feb",
-    userNotes: "",
-    notes: "Newest building on the shortlist. Flexible lease terms. Confirm exact furnished 2BR pricing and availability for the window."
-  },
-  {
-    id: "1060-brickell",
-    name: "1060 Brickell 2BR/2.5BA",
-    building: "1060 Brickell",
-    address: "1060 Brickell Ave, Miami, FL 33131",
-    lat: 25.760, lng: -80.192,
-    size: "1368 sq ft",
-    beds: "2BR / 2.5BA",
-    price: "$4,150/mo",
-    utilities: "Check",
-    available: "Check",
-    source: "MLS / Haute Team",
-    link: "https://www.hauteteam.com/property-search/detail/134/A12022746/1060-brickell-ave-miami-fl-33131/",
-    images: [
-      "https://www.furnishedfinder.com/property/747397_1/opengraph-image/a0e5f164363f6bbc",
-      "https://www.furnishedfinder.com/property/1003912_1/opengraph-image-e947g?0dcbf339c297445b"
-    ],
-    amenities: "Furnished, balcony, modern",
-    buildingAmenities: "Resort-style pool, fitness, yoga, virtual golf, game room, 24h security, valet (2008 building)",
-    fit: 7.0,
-    fitReason: "Good size and amenities; confirm furnished short-term availability and exact pricing",
-    status: "new",
-    nextAction: "Confirm short-term rate and availability",
-    userNotes: "",
-    notes: "Solid size and building amenities. Need to confirm it works for a ~2-month furnished stay."
-  },
-  {
-    id: "airbnb-bay",
-    name: "Brickell 2BR + Den | Bay Views",
-    building: "TBD",
-    address: "Brickell",
-    lat: 25.764, lng: -80.190,
-    size: "~1200+ sq ft",
-    beds: "2BR / 2BA + den",
-    price: "Monthly rate TBD",
-    utilities: "Check",
-    available: "Check Dec–Feb",
-    source: "Airbnb",
-    link: "https://www.airbnb.com/rooms/1582707058258979282",
-    images: [
-      "https://a0.muscache.com/im/pictures/hosting/Hosting-1582707058258979282/original/b700078d-58fd-449c-85f2-e622d8358f4f.png"
-    ],
-    amenities: "Bay views, free parking, pool, gym",
-    buildingAmenities: "Resort-style",
-    fit: 7.5,
-    fitReason: "Real Airbnb with bay views. Confirm monthly rate and exact size.",
-    status: "new",
-    nextAction: "Check monthly pricing for Dec–Feb",
-    userNotes: "",
-    notes: "High-rated Airbnb option with real listing photo."
-  },
-  {
-    id: "craigslist-brickellhouse",
-    name: "Brickell House 2BR",
-    building: "Brickell House",
-    address: "Brickell",
-    lat: 25.767, lng: -80.193,
-    size: "1000 sq ft",
-    beds: "2BR / 2BA",
-    price: "$5,200/mo",
-    utilities: "Check",
-    available: "Recent listing",
-    source: "Craigslist",
-    link: "https://miami.craigslist.org/mdc/apa/d/miami-brickell-house-great-layout-for/rfCxyd5vi4USB5zogfo3Hp",
-    images: [
-      "https://images.craigslist.org/00E0E_4EgQQTVj3exz_0pO0jm_600x450.jpg"
-    ],
-    amenities: "Furnished option, modern",
-    buildingAmenities: "Lap pool, spa, fitness (Sieger Suarez)",
-    fit: 6.8,
-    fitReason: "Within budget, real CL photos. Size at 1000 threshold.",
-    status: "new",
-    nextAction: "Confirm furnished short-term availability",
-    userNotes: "",
-    notes: "Recent Craigslist listing with real photos."
-  }
-];
-
-let data = listings;
-try {
-  const stored = localStorage.getItem("brickellTrackerV5");
-  if (stored) data = JSON.parse(stored);
-} catch (e) {}
-
-function save() {
-  try { localStorage.setItem("brickellTrackerV5", JSON.stringify(data)); } catch (e) {}
+const LISTINGS = [{"id":"ff-830417-1","name":"Brickell Bliss-Your Sleek Urban Oasis Amidst Miami's Lively Heartbeat","source":"Furnished Finder","sourceId":"830417_1","link":"https://www.furnishedfinder.com/property/830417_1","building":"Not a named tower","area":"West edge of the Brickell search","address":"Brickell, Miami","lat":25.76481,"lng":-80.20094,"price":3500.0,"priceLabel":"$3,500/mo","utilities":"Included","fees":[{"amount":"$200.00","type":"Pet Deposit (Non-Refundable)"},{"amount":"$300.00","type":"Cleaning Fee"},{"amount":"$1000.00","type":"Deposit (Refundable)"}],"sqft":1400,"beds":2,"baths":1,"layout":"2 bed · 1 bath","propertyType":"House","available":"Available","minStayDays":30,"amenities":{"inUnit":["Washer and dryer in the building","Pets allowed","Air conditioning","Quiet","Iron and board","Non-smoking","Starter toiletries","Portable fans","Smart TV","Wi-Fi","Cleaning products","Bathroom cleaning products","Rain shower"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Stovetop","Full-size fridge","Microwave","Kitchen essentials","Starter kitchen supplies"],"building":["Gated entry","Free parking on premises","Near transit","Wide hallways","Stairs inside or at the entrance","Parking listed"],"safety":["Smoke detector","First aid kit","Fire extinguisher"]},"dataNotes":["Furnished Finder calls this a house, not a condo.","One bathroom. The host mentions a third bedroom with its own entrance that is extra, not part of the $3,500.","The pin is west of core Brickell, toward the Little Havana side. Confirm the street before touring."],"description":"Perched in a vibrant and strategically located neighborhood, this stylish and comfortable retreat is the epitome of comfort and convenience, making it an ideal choice for small families, couples, or business travelers seeking a serene living environment while at the heart of a vibrant culture in Miami. The residence, spanning over a total of 1,400 square feet, offers maximum occupancy for up to four guests, ensuring ample space for everyone.\n\nThe house boasts two cozy bedrooms designed to provide a restful night's sleep. The primary bedroom is a tranquil haven with a luxurious full-sized bed, nightstands, a smart TV for evening entertainment, and a spacious walk-in closet. The second bedroom is perfect for additional guests or children, featuring two twin beds, nightstands, a smart TV, and a built-in closet, ensuring everyone's comfort and convenience. \n\nNote- There is  a third bedroom which features a full size bed, nightstand, private bathroom and has its own private entrance- please inquire for pricing  if needed and/ or interested. \n\nA single, elegantly designed bathroom has a modern walk-in shower, a double vanity, and practical drawers for personal items. The heart of the hom","images":["photos/ff-830417-1/01.jpg","photos/ff-830417-1/02.jpg","photos/ff-830417-1/03.jpg","photos/ff-830417-1/04.jpg","photos/ff-830417-1/05.jpg","photos/ff-830417-1/06.jpg","photos/ff-830417-1/07.jpg","photos/ff-830417-1/08.jpg","photos/ff-830417-1/09.jpg","photos/ff-830417-1/10.jpg","photos/ff-830417-1/11.jpg","photos/ff-830417-1/12.jpg","photos/ff-830417-1/13.jpg","photos/ff-830417-1/14.jpg","photos/ff-830417-1/15.jpg","photos/ff-830417-1/16.jpg","photos/ff-830417-1/17.jpg","photos/ff-830417-1/18.jpg","photos/ff-830417-1/19.jpg","photos/ff-830417-1/20.jpg","photos/ff-830417-1/22.jpg","photos/ff-830417-1/23.jpg"],"photoCount":22,"fit":7.8,"fitReason":"1400 sq ft (1200+ boost). $3,500/mo. 30-night minimum"},{"id":"ff-956644-1","name":"Brickell 2/2 - EV Charger - Free Parking - Big Balcony","source":"Furnished Finder","sourceId":"956644_1","link":"https://www.furnishedfinder.com/property/956644_1","building":"Not named on the listing","area":"Brickell","address":"Brickell, Miami","lat":25.75974,"lng":-80.19074,"price":4995.0,"priceLabel":"$4,995/mo","utilities":"Included","fees":[{"amount":"$100.00","type":"Application Fee"},{"amount":"$2500.00","type":"Deposit (Refundable)"},{"amount":"$150.00","type":"Cleaning Fee"}],"sqft":1400,"beds":2,"baths":2,"layout":"2 bed · 2 bath","propertyType":"Apartment","available":"Available: Dec. 12, 2026","minStayDays":30,"amenities":{"inUnit":["In-unit washer and dryer","Air conditioning","Iron and board","Hair dryer","Non-smoking","Starter toiletries","Desk / workspace","Blackout shades","Portable fans","Smart TV","Wi-Fi","Cleaning products","Bathroom cleaning products","Rain shower"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Stovetop","Dishwasher","Full-size fridge","Microwave","Kitchen essentials","Starter kitchen supplies"],"building":["Elevator","Pool","Gym","Gated entry","Free parking on premises","Near transit","EV charger","Wheelchair accessible","Parking listed"],"safety":["Security alarm","Smoke detector","Carbon monoxide detector","Fire extinguisher"]},"dataNotes":["Host requires HOA approval. Application fee $100, deposit $2,500, cleaning $150."],"description":"Welcome to our 2BR/2BA BRICKELL apartment designed for comfortable LONG STAYS (work trips, relocation, seasonal stays). Bright, clean, and well equipped, with a LARGE BALCONY and SUNRISE VIEWS.\n\nSLEEPING ARRANGEMENTS\n\nBEDROOM 1 (MASTER SUITE)\n1 KING BED\n42 INCH SMART TV\nWALK IN CLOSET\nPRIVATE BATHROOM\nWORKSPACE with DESK and DELL MONITOR available (great for remote work and dual screens)\n\nBEDROOM 2 (FLEXIBLE SETUP)\n2 TWIN BEDS (can be placed together to create a KING STYLE setup)\nEACH TWIN has a TRUNDLE (2 additional single beds, lower to the floor)\n42 INCH SMART TV\nWALK IN CLOSET\nPerfect for families, friends, or extra guests.\n\nLIVING ROOM AND ENTERTAINMENT\n75 INCH SAMSUNG FRAME SMART TV (premium and beautiful, great for movie nights)\nComfortable seating, a bright open layout, and a DINING TABLE that seats 6.\n\nKITCHEN AND ESSENTIALS\nFully equipped kitchen with a Nespresso Pixie Espresso Machine for your morning coffee. Plenty of storage suitable for longer stays.\n\nBALCONY\nLarge private balcony with SUNRISE VIEWS. Includes a SOFA that seats 4 and a small table with seating for 4 to 8, perfect for morning coffee or unwinding after a day out.\n\nOTHER THINGS TO NOTE\n\nPARKING AND TESLA","images":["photos/ff-956644-1/01.jpg","photos/ff-956644-1/02.jpg","photos/ff-956644-1/03.jpg","photos/ff-956644-1/04.jpg","photos/ff-956644-1/05.jpg","photos/ff-956644-1/06.jpg","photos/ff-956644-1/07.jpg","photos/ff-956644-1/08.jpg","photos/ff-956644-1/09.jpg","photos/ff-956644-1/10.jpg","photos/ff-956644-1/11.jpg","photos/ff-956644-1/12.jpg","photos/ff-956644-1/13.jpg","photos/ff-956644-1/14.jpg","photos/ff-956644-1/15.jpg","photos/ff-956644-1/16.jpg","photos/ff-956644-1/17.jpg","photos/ff-956644-1/18.jpg","photos/ff-956644-1/19.jpg","photos/ff-956644-1/20.jpg","photos/ff-956644-1/21.jpg","photos/ff-956644-1/22.jpg","photos/ff-956644-1/23.jpg","photos/ff-956644-1/24.jpg","photos/ff-956644-1/25.jpg","photos/ff-956644-1/26.jpg","photos/ff-956644-1/27.jpg","photos/ff-956644-1/28.jpg","photos/ff-956644-1/29.jpg","photos/ff-956644-1/30.jpg","photos/ff-956644-1/31.jpg","photos/ff-956644-1/32.jpg","photos/ff-956644-1/33.jpg","photos/ff-956644-1/34.jpg","photos/ff-956644-1/35.jpg","photos/ff-956644-1/36.jpg","photos/ff-956644-1/37.jpg","photos/ff-956644-1/38.jpg","photos/ff-956644-1/39.jpg","photos/ff-956644-1/40.jpg","photos/ff-956644-1/41.jpg","photos/ff-956644-1/42.jpg","photos/ff-956644-1/43.jpg","photos/ff-956644-1/44.jpg","photos/ff-956644-1/45.jpg","photos/ff-956644-1/46.jpg"],"photoCount":46,"fit":7.1,"fitReason":"1400 sq ft (1200+ boost). $4,995/mo. 30-night minimum"},{"id":"ff-747767-1","name":"Luxury Brickell Condo - 3 bed 2 bath - Pool, Gym, Sauna","source":"Furnished Finder","sourceId":"747767_1","link":"https://www.furnishedfinder.com/property/747767_1","building":"Brickell on the River","area":"Brickell, on the river","address":"Brickell, Miami","lat":25.76906,"lng":-80.19182,"price":5250.0,"priceLabel":"$5,250/mo","utilities":"Included","fees":[{"amount":"$1000.00","type":"Deposit (Refundable)"},{"amount":"$200.00","type":"Cleaning Fee"},{"amount":"$200.00","type":"Pet Deposit (Non-Refundable)"}],"sqft":1441,"beds":2,"baths":2,"layout":"2 bed · 2 bath · den","propertyType":"Condo","available":"Available","minStayDays":30,"amenities":{"inUnit":["In-unit washer and dryer","Pets allowed","Air conditioning","Heating","Quiet","Iron and board","Closet / storage","Hair dryer","Non-smoking","Starter toiletries","Desk / workspace","Smart TV","Wi-Fi","Cleaning products","Bathroom cleaning products"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Stovetop","Dishwasher","Full-size fridge","Microwave","Kitchen essentials","Starter kitchen supplies"],"building":["Elevator","Pool","Hot tub","Gym","Gated entry","Free parking on premises","Near transit","Wide hallways","Stairs inside or at the entrance","Parking listed"],"safety":["Smoke detector"]},"dataNotes":["The title says 3 bed. The host description says 2 bedrooms + den. Layout follows the description, not the title."],"description":"Beautiful 2BR + 2BD + Den Loft | Brickell on the River | 30+ Days\n\nSpacious 1,400+ sq ft 2-story loft with 2 beds + 2 baths + den, in the heart of Brickell. Professionally furnished and fully equipped for extended stays. \n\nAmenities include:\n- Desk w/ 27+ curved screen, dock, keyboard, mouse\n- In-unit washer & dryer\n- Ironing board, suitcase stands\n- 24/7 concierge\n- Two pools, hot tubs\n- 2-story gym, business center\n- MetroMover at your door\n\nAvailable for 30+ day stays, 36 month leases, or annual.\nDiscounted deposit for medium-term stays.","images":["photos/ff-747767-1/01.jpg","photos/ff-747767-1/02.jpg","photos/ff-747767-1/03.jpg","photos/ff-747767-1/04.jpg","photos/ff-747767-1/05.jpg","photos/ff-747767-1/06.jpg","photos/ff-747767-1/07.jpg","photos/ff-747767-1/08.jpg","photos/ff-747767-1/09.jpg","photos/ff-747767-1/10.jpg","photos/ff-747767-1/11.jpg","photos/ff-747767-1/12.jpg","photos/ff-747767-1/14.jpg","photos/ff-747767-1/15.jpg","photos/ff-747767-1/16.jpg","photos/ff-747767-1/17.jpg","photos/ff-747767-1/18.jpg","photos/ff-747767-1/19.jpg","photos/ff-747767-1/20.jpg","photos/ff-747767-1/21.jpg","photos/ff-747767-1/22.jpg","photos/ff-747767-1/23.jpg","photos/ff-747767-1/24.jpg","photos/ff-747767-1/25.jpg","photos/ff-747767-1/26.jpg","photos/ff-747767-1/27.jpg","photos/ff-747767-1/28.jpg","photos/ff-747767-1/29.jpg","photos/ff-747767-1/31.jpg","photos/ff-747767-1/32.jpg","photos/ff-747767-1/33.jpg","photos/ff-747767-1/34.jpg","photos/ff-747767-1/35.jpg","photos/ff-747767-1/36.jpg","photos/ff-747767-1/37.jpg","photos/ff-747767-1/38.jpg","photos/ff-747767-1/39.jpg","photos/ff-747767-1/40.jpg","photos/ff-747767-1/41.jpg"],"photoCount":39,"fit":6.9,"fitReason":"1441 sq ft (1200+ boost). $5,250/mo. 30-night minimum"},{"id":"ff-1037727-1","name":"Luxury condo in the Heart of Brickell","source":"Furnished Finder","sourceId":"1037727_1","link":"https://www.furnishedfinder.com/property/1037727_1","building":"Street address not published","area":"Brickell","address":"Brickell, Miami","lat":25.7633,"lng":-80.19195,"price":4000.0,"priceLabel":"$4,000/mo","utilities":"Not included","fees":[],"sqft":1368,"beds":2,"baths":2.5,"layout":"2 bed · 2.5 bath","propertyType":"Condo","available":"Available: Oct. 30, 2026","minStayDays":30,"amenities":{"inUnit":["In-unit washer and dryer","Air conditioning","Heating","Blackout shades","Wi-Fi","Desk / workspace","Rain shower","Iron and board","Smart TV","TV","Quiet","Cleaning products","Bathroom cleaning products","Starter toiletries"],"kitchen":["Dishwasher","Linens, towels, and kitchenware","Full-size fridge","Kitchen","Kitchen essentials","Microwave","Stovetop","Dining table"],"building":["Gated entry","Near transit","Exercise equipment","Gym","Covered parking","EV charger","24-hour reception","Wheelchair accessible","Wide hallways"],"safety":["Carbon monoxide detector","First aid kit","Security alarm","Smoke detector"]},"dataNotes":["1,368 sq ft and 2.5 baths. This is a Furnished Finder listing, not the MLS card for 1060 Brickell #2201."],"description":"Located in the heart of Brickell, you are truly within walking distance of everything. Step outside and explore top rated restaurants, cafés, nightlife, and shopping at Brickell City Center. The property has a gym/ sauna/ family room and yoga studio. \nGarage Parking is included.","images":["photos/ff-1037727-1/01.jpg","photos/ff-1037727-1/02.jpg","photos/ff-1037727-1/03.jpg","photos/ff-1037727-1/04.jpg","photos/ff-1037727-1/05.jpg","photos/ff-1037727-1/06.jpg","photos/ff-1037727-1/07.jpg","photos/ff-1037727-1/08.jpg"],"photoCount":8,"fit":6.7,"fitReason":"1368 sq ft (1200+ boost). $4,000/mo. 30-night minimum"},{"id":"ff-362988-1","name":"Brickell 2/2 On The Water.","source":"Furnished Finder","sourceId":"362988_1","link":"https://www.furnishedfinder.com/property/362988_1","building":"Not named on the listing","area":"South Brickell, on the water","address":"Brickell, Miami","lat":25.75905,"lng":-80.18987,"price":2900.0,"priceLabel":"$2,900/mo","utilities":"Included","fees":[{"amount":"$500.00","type":"Deposit (Refundable)"},{"amount":"$100.00","type":"Application Fee"}],"sqft":1200,"beds":2,"baths":2,"layout":"2 bed · 2 bath","propertyType":"Condo","available":"Available","minStayDays":60,"amenities":{"inUnit":["In-unit washer and dryer","A pet lives on the property","Air conditioning","Heating","Quiet","Closet / storage","Hair dryer","Non-smoking","Starter toiletries","Desk / workspace","Blackout shades","Portable fans","TV","DVR","Smart TV","Wi-Fi","Cleaning products","Bathroom cleaning products"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Stovetop","Dishwasher","Full-size fridge","Microwave","Kitchen essentials","Starter kitchen supplies"],"building":["Elevator","Pool","Gym","Gated entry","Near transit","Wheelchair accessible","Wide hallways","Stairs inside or at the entrance","Parking listed"],"safety":["Security alarm","Smoke detector","First aid kit","Fire extinguisher"]},"dataNotes":["Host describes a corner unit with a Biscayne Bay view. Minimum stay is 60 nights."],"description":"University of Miami Medical Campus and hospital, Jackson Memorial Hospital, Bascom Palmer Institute, Sylvester Can cer Center and VA are all 10 minutes away by car and also easily accessible via the Metro just a block away.  The apartment is in a corner unit with view of Biscayne Bay and the city. Jogging is safe for hogging just outside along the sea wall. Key Biscayne Beaches are 4 miles away, however, Key Biscayne is clearly visible from the balcony.  Restaurants of all sorts are walking distance and surround this area also called the Financial District or Brickell. Key Largo is less than an hour. Grocery stores are less than half mile away and walkable. This light and airy condo is fully furnished and the kitchen totally equipped.","images":["photos/ff-362988-1/01.jpg","photos/ff-362988-1/02.jpg","photos/ff-362988-1/03.jpg","photos/ff-362988-1/04.jpg","photos/ff-362988-1/05.jpg","photos/ff-362988-1/06.jpg"],"photoCount":6,"fit":6.7,"fitReason":"1200 sq ft (1200+ boost). $2,900/mo. 60-night minimum"},{"id":"ff-942194-1","name":"COZY APARTMENT IN BRICKEL","source":"Furnished Finder","sourceId":"942194_1","link":"https://www.furnishedfinder.com/property/942194_1","building":"Not named on the listing","area":"Brickell","address":"Brickell, Miami","lat":25.76904,"lng":-80.19203,"price":3800.0,"priceLabel":"$3,800/mo","utilities":"Included","fees":[],"sqft":1300,"beds":2,"baths":2,"layout":"2 bed · 2 bath","propertyType":"Condo","available":"Available: Jan. 25, 2027","minStayDays":30,"amenities":{"inUnit":["In-unit washer and dryer","Air conditioning","Quiet","Smart TV","Cleaning products","Bathroom cleaning products","Rain shower"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Dishwasher","Full-size fridge","Microwave","Kitchen essentials"],"building":["Elevator","Exercise equipment","Pool","Gym","Free parking on premises","24-hour reception"],"safety":["Security alarm","Smoke detector"]},"dataNotes":["Available January 25, 2027, so it only covers the second half of a mid-December to mid-February stay."],"description":".Modern 2/2 in the heart of Brickell  stylish, fully furnished, and perfect for short-term stays. Enjoy city and water views, resort-style amenities, walkability to Brickell City Centre, top restaurants, and Miamis best nightlife. Ideal for business or leisure.","images":["photos/ff-942194-1/01.jpg","photos/ff-942194-1/02.jpg","photos/ff-942194-1/03.jpg","photos/ff-942194-1/04.jpg","photos/ff-942194-1/05.jpg","photos/ff-942194-1/06.jpg","photos/ff-942194-1/07.jpg","photos/ff-942194-1/08.jpg","photos/ff-942194-1/09.jpg"],"photoCount":9,"fit":6.6,"fitReason":"1300 sq ft (1200+ boost). $3,800/mo. 30-night minimum. available date starts inside the stay window"},{"id":"airbnb-bay","name":"Brickell 2BR + Den | Bay Views | Free Parking","source":"Airbnb","sourceId":"1582707058258979282","link":"https://www.airbnb.com/rooms/1582707058258979282","building":"Not named on the public page","area":"Brickell","address":"Brickell, Miami","lat":25.764,"lng":-80.19,"price":null,"priceLabel":"Monthly total not listed","utilities":"Check listing","fees":[],"sqft":null,"beds":2,"baths":2,"layout":"2 bed · 2 bath · den","propertyType":"Entire rental","available":"Set Dec 2026–Feb 2027 on Airbnb","minStayDays":null,"amenities":{"inUnit":["Bay views"],"kitchen":["Kitchen"],"building":["Free parking","Pool","Gym"],"safety":[]},"dataNotes":["Airbnb shows 2 bedrooms, 4 beds, 2 baths, and a den in the title. Rated 4.92 from 39 reviews. Hosts David and Monica.","Square footage and the monthly total are not on the public page, so they are left blank instead of guessed."],"description":"Entire rental hosted by David & Monica. 4.92 from 39 reviews. Walkable Brickell, free garage parking, heated pool and gym. Square footage and the monthly total for mid-Dec 2026–mid-Feb 2027 are not published on the listing page without dates, so this is not scored as a confirmed budget fit until those are checked.","images":["photos/airbnb-bay/01.jpg","photos/airbnb-bay/02.jpg","photos/airbnb-bay/03.jpg","photos/airbnb-bay/04.jpg","photos/airbnb-bay/05.jpg","photos/airbnb-bay/06.jpg","photos/airbnb-bay/07.jpg","photos/airbnb-bay/08.jpg","photos/airbnb-bay/09.jpg","photos/airbnb-bay/10.jpg","photos/airbnb-bay/11.jpg","photos/airbnb-bay/12.jpg","photos/airbnb-bay/13.jpg","photos/airbnb-bay/14.jpg","photos/airbnb-bay/15.jpg","photos/airbnb-bay/16.jpg","photos/airbnb-bay/17.jpg","photos/airbnb-bay/18.jpg","photos/airbnb-bay/19.jpg","photos/airbnb-bay/20.jpg","photos/airbnb-bay/21.jpg","photos/airbnb-bay/22.jpg","photos/airbnb-bay/23.jpg","photos/airbnb-bay/24.jpg","photos/airbnb-bay/25.jpg","photos/airbnb-bay/26.jpg","photos/airbnb-bay/27.jpg","photos/airbnb-bay/28.jpg","photos/airbnb-bay/29.jpg","photos/airbnb-bay/30.jpg","photos/airbnb-bay/31.jpg","photos/airbnb-bay/32.jpg","photos/airbnb-bay/33.jpg","photos/airbnb-bay/34.jpg","photos/airbnb-bay/35.jpg","photos/airbnb-bay/36.jpg","photos/airbnb-bay/37.jpg","photos/airbnb-bay/38.jpg","photos/airbnb-bay/39.jpg","photos/airbnb-bay/40.jpg","photos/airbnb-bay/41.jpg","photos/airbnb-bay/42.jpg","photos/airbnb-bay/43.jpg","photos/airbnb-bay/44.jpg","photos/airbnb-bay/45.jpg","photos/airbnb-bay/46.jpg","photos/airbnb-bay/47.jpg","photos/airbnb-bay/48.jpg","photos/airbnb-bay/49.jpg","photos/airbnb-bay/50.jpg","photos/airbnb-bay/51.jpg","photos/airbnb-bay/52.jpg","photos/airbnb-bay/53.jpg","photos/airbnb-bay/54.jpg","photos/airbnb-bay/55.jpg","photos/airbnb-bay/57.jpg","photos/airbnb-bay/58.jpg","photos/airbnb-bay/59.jpg"],"photoCount":58,"fit":6.2,"fitReason":"Real Airbnb gallery only. Sq ft and monthly price are unconfirmed, so size boost is not applied."},{"id":"ff-844545-1","name":"Brickell 2BR Loft | 2 Free Parking Spaces + Bay and Views","source":"Furnished Finder","sourceId":"844545_1","link":"https://www.furnishedfinder.com/property/844545_1","building":"Pin matches the Brickell on the River cluster","area":"Brickell, on the river","address":"Brickell, Miami","lat":25.769,"lng":-80.19184,"price":5500.0,"priceLabel":"$5,500/mo","utilities":"Included","fees":[{"amount":"$250.00","type":"Cleaning Fee"},{"amount":"$250.00","type":"Pet Deposit (Non-Refundable)"},{"amount":"$1500.00","type":"Security Deposit"}],"sqft":1289,"beds":2,"baths":2,"layout":"2 bed · 2 bath · loft","propertyType":"Condo","available":"Available: Nov. 06, 2026","minStayDays":30,"amenities":{"inUnit":["In-unit washer and dryer","Pets allowed","Air conditioning","Quiet","Iron and board","Closet / storage","Hair dryer","Non-smoking","Starter toiletries","Desk / workspace","Blackout shades","Portable fans","TV","Smart TV","Wi-Fi","Cleaning products","Bathroom cleaning products","Rain shower"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Stovetop","Dishwasher","Full-size fridge","Microwave","Kitchen essentials","Starter kitchen supplies","Dining table"],"building":["Elevator","Exercise equipment","Pool","Hot tub","Gym","Gated entry","Free parking on premises","Near transit","EV charger","Wheelchair accessible","Stairs inside or at the entrance","Accessible parking","Parking listed"],"safety":["Security alarm","Smoke detector","Carbon monoxide detector","First aid kit","Fire extinguisher"]},"dataNotes":["Two-story corner loft with two balconies. The building name is not printed on the search card."],"description":"Fully furnished 2BR/2BA two-story corner loft in the heart of Brickell, ideal for 30+ day stays. Features soaring ceilings, floor-to-ceiling windows, two private balconies with city and bay views, a full kitchen, in-unit laundry, high-speed Wi-Fi and 2 complimentary parking spaces. Walk to Brickell City Centre, restaurants, cafes, shopping and the Metromover. All utilities included.","images":["photos/ff-844545-1/01.jpg","photos/ff-844545-1/02.jpg","photos/ff-844545-1/03.jpg","photos/ff-844545-1/04.jpg","photos/ff-844545-1/05.jpg","photos/ff-844545-1/06.jpg","photos/ff-844545-1/07.jpg","photos/ff-844545-1/08.jpg","photos/ff-844545-1/09.jpg","photos/ff-844545-1/10.jpg","photos/ff-844545-1/11.jpg","photos/ff-844545-1/12.jpg","photos/ff-844545-1/13.jpg","photos/ff-844545-1/14.jpg","photos/ff-844545-1/15.jpg","photos/ff-844545-1/16.jpg","photos/ff-844545-1/17.jpg","photos/ff-844545-1/18.jpg","photos/ff-844545-1/19.jpg","photos/ff-844545-1/20.jpg","photos/ff-844545-1/21.jpg","photos/ff-844545-1/22.jpg","photos/ff-844545-1/23.jpg","photos/ff-844545-1/24.jpg","photos/ff-844545-1/25.jpg","photos/ff-844545-1/26.jpg","photos/ff-844545-1/27.jpg","photos/ff-844545-1/28.jpg","photos/ff-844545-1/29.jpg","photos/ff-844545-1/30.jpg","photos/ff-844545-1/32.jpg","photos/ff-844545-1/33.jpg","photos/ff-844545-1/34.jpg","photos/ff-844545-1/35.jpg"],"photoCount":34,"fit":5.8,"fitReason":"1289 sq ft (1200+ boost). $5,500/mo. 30-night minimum"},{"id":"ff-665627-1","name":"Corner unit, BEST LOCATION, 2 Bedroom/2 Bath Two Story Apartment  with floor to ceiling windows","source":"Furnished Finder","sourceId":"665627_1","link":"https://www.furnishedfinder.com/property/665627_1","building":"Pin matches the Brickell on the River cluster","area":"Brickell, on the river","address":"Brickell, Miami","lat":25.76906,"lng":-80.19182,"price":5500.0,"priceLabel":"$5,500/mo","utilities":"Included","fees":[{"amount":"$1000.00","type":"Deposit (Refundable)"}],"sqft":1250,"beds":2,"baths":2,"layout":"2 bed · 2 bath · two story","propertyType":"Apartment","available":"Available","minStayDays":30,"amenities":{"inUnit":["In-unit washer and dryer","Air conditioning","Heating","Quiet","Hair dryer","Non-smoking","Desk / workspace","Blackout shades","TV","Smart TV","Wi-Fi"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Stovetop","Dishwasher","Full-size fridge","Microwave","Kitchen essentials"],"building":["Elevator","Exercise equipment","Pool","Hot tub","Gym","Gated entry","Free parking on premises","Near transit","EV charger","Wide hallways","Stairs inside or at the entrance","Parking listed"],"safety":["Security alarm","Smoke detector","Carbon monoxide detector"]},"dataNotes":["Same approximate pin as the other river lofts. Host describes a corner two-story unit."],"description":"The unit is beautiful unique and stunning with super high floor to ceiling windows! you feel like you're outside when you're inside because the apartment is so sunny (dont worry there are blinds if needed)! two balconies.  All furnished with essentials for cooking. 2 pools are beautiful and BEST location in all of brickell! located right on the river! walking score is 100! parking spot on site.","images":["photos/ff-665627-1/01.jpg","photos/ff-665627-1/02.jpg","photos/ff-665627-1/03.jpg","photos/ff-665627-1/04.jpg","photos/ff-665627-1/05.jpg","photos/ff-665627-1/07.jpg","photos/ff-665627-1/08.jpg","photos/ff-665627-1/09.jpg","photos/ff-665627-1/10.jpg","photos/ff-665627-1/11.jpg","photos/ff-665627-1/12.jpg","photos/ff-665627-1/13.jpg","photos/ff-665627-1/14.jpg","photos/ff-665627-1/15.jpg","photos/ff-665627-1/17.jpg","photos/ff-665627-1/18.jpg","photos/ff-665627-1/19.jpg","photos/ff-665627-1/20.jpg","photos/ff-665627-1/21.jpg","photos/ff-665627-1/22.jpg","photos/ff-665627-1/23.jpg","photos/ff-665627-1/24.jpg","photos/ff-665627-1/25.jpg"],"photoCount":23,"fit":5.8,"fitReason":"1250 sq ft (1200+ boost). $5,500/mo. 30-night minimum"},{"id":"ff-1041941-1","name":"Escape the Winter By Coming to Miami","source":"Furnished Finder","sourceId":"1041941_1","link":"https://www.furnishedfinder.com/property/1041941_1","building":"Axis on Brickell II","area":"Brickell","address":"Brickell, Miami","lat":25.76284,"lng":-80.19465,"price":3400.0,"priceLabel":"$3,400/mo","utilities":"Included","fees":[],"sqft":1013,"beds":2,"baths":2,"layout":"2 bed · 2 bath","propertyType":"Apartment","available":"Available","minStayDays":60,"amenities":{"inUnit":["In-unit washer and dryer","Air conditioning","Wi-Fi","Desk / workspace","Hair dryer","Iron and board","Game console","Smart TV","Quiet"],"kitchen":["Dining table","Full-size fridge","Dishwasher","Kitchen","Microwave","Stovetop","Linens, towels, and kitchenware","Kitchen essentials","Outdoor grill"],"building":["Elevator","Near transit","Exercise equipment","Pool","Gym","Hot tub","Parking listed","24-hour reception","Wheelchair accessible"],"safety":["Carbon monoxide detector"]},"dataNotes":["Host says the unit is about 1,013 sq ft in Axis on Brickell II, built in 2008. The search card had rounded this to 1,000."],"description":"Step into refined Brickell living in this beautifully updated 2-bedroom, 2-bathroom residence at The Axis on Brickell II. Built in 2008 and spanning 1,013 square feet, this split-bedroom layout is designed for both privacy and flow, with floor-to-ceiling windows flooding every room in natural light and private balcony access from each bedroom and the main living space.\n\nInside, you'll find modern finishes throughout, sleek ceramic flooring (no carpet), and an open living and dining area that's equally suited to entertaining or quiet nights in. Sweeping, unobstructed views of Mary Brickell Village round out the appeal of this move-in-ready home.\n\nLocation, location, location: this residence sits just one block from Mary Brickell Village and a short three-block stroll to Brickell City Centre, putting boutique shopping, top restaurants, and nightlife right outside your door. With a Walk Score near-perfect at 99, plus quick access to the Baywalk and Metromover, this is true car-optional urban living.\n\nBuilding amenities include:\n- Two resort-style swimming pools\n- Full fitness center\n- Resident clubrooms and BBQ/lounge area\n- Valet parking \n- 24-hour concierge and security\n\nWhether you","images":["photos/ff-1041941-1/01.jpg","photos/ff-1041941-1/02.jpg","photos/ff-1041941-1/03.jpg","photos/ff-1041941-1/04.jpg","photos/ff-1041941-1/05.jpg","photos/ff-1041941-1/06.jpg","photos/ff-1041941-1/07.jpg","photos/ff-1041941-1/08.jpg"],"photoCount":8,"fit":4.1,"fitReason":"1000 sq ft (under the 1200 preference). $3,400/mo. 60-night minimum"},{"id":"ff-989721-1","name":"Stylish Condo in Brickell Miami","source":"Furnished Finder","sourceId":"989721_1","link":"https://www.furnishedfinder.com/property/989721_1","building":"Not named on the listing","area":"Brickell","address":"Brickell, Miami","lat":25.7695,"lng":-80.1919,"price":4400.0,"priceLabel":"$4,400/mo","utilities":"Included","fees":[],"sqft":1110,"beds":2,"baths":2,"layout":"2 bed · 2 bath","propertyType":"Condo","available":"Available: Jan. 04, 2027","minStayDays":60,"amenities":{"inUnit":["In-unit washer and dryer","Air conditioning","Quiet","Iron and board","Hair dryer","Non-smoking","Smart TV","Wi-Fi","Cleaning products","Bathroom cleaning products","Rain shower"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Dishwasher","Full-size fridge","Microwave","Kitchen essentials"],"building":["Elevator","Exercise equipment","Pool","Gym","Gated entry","Free parking on premises","Near transit","Wheelchair accessible"],"safety":["Security alarm","Smoke detector","Fire extinguisher"]},"dataNotes":["Available January 4, 2027. That misses most of December."],"description":"Live in style in this newly furnished, split 2-bedroom/2-bathroom condo in the heart of Brickell. Designed with a clean, modern aesthetic, this \"Airbnb-style\" home is fully equipped for a seamless, turnkey stay.\n\nSun-Drenched & Serene: Large windows throughout offer a bright, sunny atmosphere and peaceful water bay views.\n\nIndoor-Outdoor Living: Every room features its own access to a private balcony, perfect for enjoying the breeze.\n\nPrivacy First: The split floor plan ensures maximum privacy between bedroomsideal for roommates or remote work.\n\nTop-Tier Amenities: Stay active in the expansive gym or unwind by the resort-style pool.\n\nFully Equipped: From high-end kitchenware to plush linens, everything is providedjust bring your suitcase.\n\nEnjoy the best of Brickells energy from the comfort of a quiet, upscale waterfront retreat.","images":["photos/ff-989721-1/01.jpg","photos/ff-989721-1/02.jpg","photos/ff-989721-1/03.jpg","photos/ff-989721-1/04.jpg","photos/ff-989721-1/05.jpg","photos/ff-989721-1/06.jpg","photos/ff-989721-1/07.jpg","photos/ff-989721-1/08.jpg","photos/ff-989721-1/09.jpg","photos/ff-989721-1/10.jpg"],"photoCount":10,"fit":4.0,"fitReason":"1110 sq ft (under the 1200 preference). $4,400/mo. 60-night minimum. available date starts inside the stay window"},{"id":"ff-1036901-1","name":"2 bedroom Brickell Condo Living with fabulous views","source":"Furnished Finder","sourceId":"1036901_1","link":"https://www.furnishedfinder.com/property/1036901_1","building":"Not named on the listing","area":"Brickell","address":"Brickell, Miami","lat":25.7633,"lng":-80.19195,"price":4480.0,"priceLabel":"$4,480/mo","utilities":"Not included","fees":[{"amount":"$150.00","type":"Cleaning Fee"},{"amount":"$500.00","type":"Deposit (Refundable)"}],"sqft":1038,"beds":2,"baths":2,"layout":"2 bed · 2 bath","propertyType":"Condo","available":"Available: Dec. 20, 2026","minStayDays":30,"amenities":{"inUnit":["In-unit washer and dryer","Air conditioning","Blackout shades","Closet / storage","Wi-Fi","Non-smoking","Desk / workspace","Hair dryer","Iron and board","Smart TV","Cleaning products","Bathroom cleaning products","Starter toiletries"],"kitchen":["Dining table","Dishwasher","Linens, towels, and kitchenware","Full-size fridge","Kitchen","Kitchen essentials","Microwave","Starter kitchen supplies","Stovetop"],"building":["Elevator","Gated entry","Near transit","Gym","24-hour reception"],"safety":["Carbon monoxide detector","Fire extinguisher","Smoke detector"]},"dataNotes":["Utilities are not included. Host says the building pool is closed for renovation."],"description":"At the heart of Brickell, close to bars, restaurants, world class shopping mall, and 2 blocks from Biscayne Bay. \nBeautiful 2 bedroom 2 bathroom condo apartment on high floor with priceless view from the master bedroom. \nLuxury shared amenities including a large gym. \nThis is Miami at its best !\n\nPlease note : due to ongoing renovation work, the pool is currently closed.","images":["photos/ff-1036901-1/01.jpg","photos/ff-1036901-1/02.jpg","photos/ff-1036901-1/03.jpg","photos/ff-1036901-1/04.jpg","photos/ff-1036901-1/05.jpg","photos/ff-1036901-1/06.jpg","photos/ff-1036901-1/07.jpg","photos/ff-1036901-1/08.jpg","photos/ff-1036901-1/09.jpg","photos/ff-1036901-1/10.jpg","photos/ff-1036901-1/11.jpg","photos/ff-1036901-1/12.jpg"],"photoCount":12,"fit":3.5,"fitReason":"1038 sq ft (under the 1200 preference). $4,480/mo. 30-night minimum"},{"id":"ff-1001245-1","name":"Turnkey Brickell 2/2 Condo , completely furnished , all utilities included.Steps to shopping, dining, transportation.","source":"Furnished Finder","sourceId":"1001245_1","link":"https://www.furnishedfinder.com/property/1001245_1","building":"Axis on Brickell","area":"Brickell","address":"Brickell, Miami","lat":25.76267,"lng":-80.19472,"price":4500.0,"priceLabel":"$4,500/mo","utilities":"Included","fees":[{"amount":"$150.00","type":"Application Fee"},{"amount":"$250.00","type":"Cleaning Fee"},{"amount":"$4500.00","type":"Deposit (Refundable)"}],"sqft":1024,"beds":2,"baths":2,"layout":"2 bed · 2 bath","propertyType":"Condo","available":"Available: Jan. 15, 2027","minStayDays":60,"amenities":{"inUnit":["In-unit washer and dryer","Air conditioning","Quiet","Hair dryer","Non-smoking","Starter toiletries","TV","Wi-Fi"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Stovetop","Dishwasher","Full-size fridge","Microwave","Starter kitchen supplies"],"building":["Elevator","Exercise equipment","Pool","Hot tub","Gym","Free parking on premises","Near transit","Wheelchair accessible","Wide hallways","Parking listed"],"safety":["Security alarm","Smoke detector"]},"dataNotes":["Search card says 30 nights. The host text says a 60-night minimum and association approval. The stay field uses 60."],"description":"Experience luxury living in the heart of Brickell at Axis on Brickell! This beautifully furnished 2-bedroom, 2-bath residence on the 17th floor offers stunning city views, modern finishes, a split-bedroom floor plan, floor-to-ceiling windows, and a private balcony. Rent includes electricity, water, high-speed internet, and one assigned parking space for a truly hassle-free stay.Enjoy resort-style amenities including two swimming pools, state-of-the-art fitness center, spa, business center, clubroom, concierge service, valet, and 24-hour security. Ideally located directly across from the Brickell Metrorail and Metromover stations and just steps from Brickell City Centre, Mary Brickell Village, world-class dining, shopping, and entertainment.Available for short-term rentals with a minimum lease term of 60 days. Perfect for corporate relocations, seasonal residents, and professionals seeking a turnkey Brickell lifestyle. Full Sofa bed in livingroom for upto (2 guests). Association approval needed. Quick process.","images":["photos/ff-1001245-1/01.jpg","photos/ff-1001245-1/02.jpg","photos/ff-1001245-1/03.jpg","photos/ff-1001245-1/04.jpg","photos/ff-1001245-1/05.jpg","photos/ff-1001245-1/06.jpg","photos/ff-1001245-1/07.jpg","photos/ff-1001245-1/08.jpg","photos/ff-1001245-1/09.jpg","photos/ff-1001245-1/10.jpg","photos/ff-1001245-1/11.jpg","photos/ff-1001245-1/12.jpg","photos/ff-1001245-1/13.jpg","photos/ff-1001245-1/14.jpg","photos/ff-1001245-1/15.jpg","photos/ff-1001245-1/16.jpg","photos/ff-1001245-1/17.jpg","photos/ff-1001245-1/18.jpg","photos/ff-1001245-1/19.jpg"],"photoCount":19,"fit":2.9,"fitReason":"1,024 sq ft (under the 1,200 preference). $4,500/mo. Host text says 60 nights, not the 30 on the search card. Available January 15, 2027."},{"id":"ff-747397-1","name":"Spacious 2/2 on Brickell Ave w. Free Parking","source":"Furnished Finder","sourceId":"747397_1","link":"https://www.furnishedfinder.com/property/747397_1","building":"Not named on the listing","area":"Brickell","address":"Brickell, Miami","lat":25.76066,"lng":-80.19128,"price":4500.0,"priceLabel":"$4,500/mo","utilities":"Included","fees":[{"amount":"$250.00","type":"Cleaning Fee"},{"amount":"$100.00","type":"Application Fee"},{"amount":"$700.00","type":"Deposit (Refundable)"}],"sqft":1000,"beds":2,"baths":2,"layout":"2 bed · 2 bath","propertyType":"Condo","available":"Available: Jan. 09, 2027","minStayDays":30,"amenities":{"inUnit":["In-unit washer and dryer","Pets allowed","A pet lives on the property","Air conditioning","Quiet","Hair dryer","Non-smoking","Starter toiletries","Blackout shades","TV","Smart TV","Wi-Fi","Cleaning products","Bathroom cleaning products"],"kitchen":["Linens, towels, and kitchenware","Kitchen","Stovetop","Dishwasher","Full-size fridge","Microwave","Kitchen essentials","Starter kitchen supplies"],"building":["Elevator","Pool","Gym","Gated entry","Free parking on premises","Near transit","Wheelchair accessible","Wide hallways","Accessible parking","Parking listed"],"safety":["Security alarm","Smoke detector","Carbon monoxide detector","Fire extinguisher"]},"dataNotes":["Available January 9, 2027. That misses most of December."],"description":"Welcome to your spacious 2 bed, 2 bath retreat in the heart of Brickell! This modern apartment offers all the comforts of home with a sleek and spacious design. Located within walking distance to top restaurants, bars, and entertainment, youll be in the center of Miamis vibrant lifestyle. Enjoy building amenities like a gym, pool, and free assigned parking in the garage. Plus, Miami Beach is just a 15-minute drive away. Book your stay now and experience the best of Brickell and Miami!","images":["photos/ff-747397-1/01.jpg","photos/ff-747397-1/02.jpg","photos/ff-747397-1/03.jpg","photos/ff-747397-1/04.jpg","photos/ff-747397-1/05.jpg","photos/ff-747397-1/06.jpg","photos/ff-747397-1/07.jpg","photos/ff-747397-1/08.jpg","photos/ff-747397-1/09.jpg","photos/ff-747397-1/10.jpg","photos/ff-747397-1/11.jpg","photos/ff-747397-1/12.jpg","photos/ff-747397-1/13.jpg","photos/ff-747397-1/14.jpg","photos/ff-747397-1/15.jpg","photos/ff-747397-1/16.jpg","photos/ff-747397-1/17.jpg","photos/ff-747397-1/18.jpg","photos/ff-747397-1/19.jpg","photos/ff-747397-1/20.jpg","photos/ff-747397-1/21.jpg","photos/ff-747397-1/22.jpg","photos/ff-747397-1/23.jpg","photos/ff-747397-1/24.jpg","photos/ff-747397-1/25.jpg","photos/ff-747397-1/26.jpg","photos/ff-747397-1/27.jpg","photos/ff-747397-1/28.jpg","photos/ff-747397-1/29.jpg","photos/ff-747397-1/30.jpg","photos/ff-747397-1/31.jpg","photos/ff-747397-1/32.jpg","photos/ff-747397-1/33.jpg","photos/ff-747397-1/34.jpg","photos/ff-747397-1/35.jpg","photos/ff-747397-1/37.jpg","photos/ff-747397-1/38.jpg","photos/ff-747397-1/43.jpg","photos/ff-747397-1/44.jpg"],"photoCount":39,"fit":3.3,"fitReason":"1000 sq ft (under the 1200 preference). $4,500/mo. 30-night minimum. available date starts inside the stay window"}];
+const STATUSES = ["New","Reached out","Got response","Tour","Rejected","Booked"];
+const state = JSON.parse(localStorage.getItem("brickellTrackerV6") || "{}");
+function save(){ localStorage.setItem("brickellTrackerV6", JSON.stringify(state)); }
+function rec(id){ return state[id] || (state[id] = {status:"New", next:"", notes:""}); }
+function fitClass(n){ return n>=7?"hi":n>=5?"mid":"lo"; }
+function byFit(a,b){ return b.fit-a.fit || (b.sqft||0)-(a.sqft||0); }
+function escapeHtml(s){
+  return String(s ?? "")
+    .replace(/&/g, "&" + "amp;")
+    .replace(/</g, "&" + "lt;")
+    .replace(/>/g, "&" + "gt;")
+    .replace(/"/g, "&" + "quot;")
+    .replace(/'/g, "&" + "#39;");
+}
+function money(l){ return l.priceLabel; }
+function stayLabel(l){
+  return l.minStayDays ? l.minStayDays + " nights" : "Not listed";
 }
 
-function fitClass(f) { return f >= 8 ? "fit-high" : f >= 6 ? "fit-med" : "fit-low"; }
+const grid = document.getElementById("grid");
+const qEl = document.getElementById("q");
+const fitEl = document.getElementById("fit");
+const srcEl = document.getElementById("src");
+const stEl = document.getElementById("st");
+[...new Set(LISTINGS.map(l => l.source))].forEach(s => {
+  const o = document.createElement("option");
+  o.textContent = s;
+  srcEl.appendChild(o);
+});
+document.getElementById("count").textContent = LISTINGS.length + " listings · " + LISTINGS.reduce((n,l)=>n+l.photoCount,0) + " unique photos";
 
-function renderList() {
-  const q = (document.getElementById("search")?.value || "").toLowerCase();
-  const ff = document.getElementById("filterFit")?.value || "";
-  const fs = document.getElementById("filterStatus")?.value || "";
-  const grid = document.getElementById("grid");
-  grid.innerHTML = "";
-
-  const filtered = data.filter(l => {
-    const hay = (l.name + " " + (l.building||"") + " " + (l.amenities||"")).toLowerCase();
-    const matchQ = !q || hay.includes(q);
-    const matchF = !ff || (ff === "high" && l.fit >= 8) || (ff === "med" && l.fit >= 6 && l.fit < 8) || (ff === "low" && l.fit < 6);
-    const matchS = !fs || l.status === fs;
-    return matchQ && matchF && matchS;
-  }).sort((a, b) => b.fit - a.fit);
-
-  filtered.forEach(l => {
-    const card = document.createElement("div");
-    card.className = "card";
-    card.onclick = () => showDetail(l.id);
-    const gid = "g" + l.id;
-    card.innerHTML = `
-      <div class="gallery-wrap" id="${gid}">
-        <button class="arrow left" onclick="event.stopPropagation(); slide('${gid}', -1)">‹</button>
-        <div class="gallery-row">
-          ${l.images.map(src => `<img src="${src}" alt="" onerror="this.style.display='none'">`).join("")}
-        </div>
-        <button class="arrow right" onclick="event.stopPropagation(); slide('${gid}', 1)">›</button>
-      </div>
-      <div class="card-body">
-        <span class="fit-badge ${fitClass(l.fit)}">Fit ${l.fit}/10</span>
-        <h3 style="margin:6px 0 2px; font-size:1.05rem;">${l.name}</h3>
-        <p style="margin:0; color:var(--muted); font-size:0.85rem;">${l.building} · ${l.size}</p>
-        <p class="price" style="margin:8px 0 0;">${l.price}</p>
-        <p style="margin:4px 0 0; font-size:0.8rem; color:var(--muted);">${l.available} · ${l.source}</p>
-      </div>
-    `;
-    grid.appendChild(card);
+function filtered(){
+  const q = qEl.value.trim().toLowerCase();
+  return LISTINGS.filter(l => {
+    const blob = [l.name, l.building, l.area, l.description, l.source].join(" ").toLowerCase();
+    if (q && !blob.includes(q)) return false;
+    if (fitEl.value && fitClass(l.fit) !== fitEl.value) return false;
+    if (srcEl.value && l.source !== srcEl.value) return false;
+    if (stEl.value && rec(l.id).status !== stEl.value) return false;
+    return true;
+  }).sort(byFit);
+}
+function stageHTML(l){
+  const multi = l.images.length > 1;
+  return `<div class="stage" data-id="${l.id}" data-i="0">
+    ${multi ? '<button class="nav prev" type="button" aria-label="Previous photo">‹</button>' : ""}
+    <img alt="${escapeHtml(l.name)} photo" src="${l.images[0] || ""}">
+    <span class="count">1 / ${l.images.length}</span>
+    ${multi ? '<button class="nav next" type="button" aria-label="Next photo">›</button>' : ""}
+  </div>`;
+}
+function bindStage(root){
+  root.querySelectorAll(".stage").forEach(stage => {
+    const l = LISTINGS.find(x => x.id === stage.dataset.id);
+    const img = stage.querySelector("img");
+    const count = stage.querySelector(".count");
+    const go = (dir, ev) => {
+      if (ev) ev.stopPropagation();
+      let i = (Number(stage.dataset.i) + dir + l.images.length) % l.images.length;
+      stage.dataset.i = String(i);
+      img.src = l.images[i];
+      count.textContent = (i + 1) + " / " + l.images.length;
+    };
+    stage.querySelectorAll(".nav").forEach(btn => {
+      btn.onclick = ev => go(btn.classList.contains("next") ? 1 : -1, ev);
+    });
   });
 }
-
-function showDetail(id) {
-  document.getElementById("list-view").style.display = "none";
-  document.getElementById("detail-view").classList.add("active");
-  renderSidebar(id);
-  renderDetail(id);
-}
-
-
-function scrollSidebar(dir) {
-  const inner = document.getElementById("sidebar-inner");
-  if (inner) inner.scrollBy({ top: dir * 80, behavior: "smooth" });
-}
-function showList() {
-  document.getElementById("detail-view").classList.remove("active");
-  document.getElementById("list-view").style.display = "block";
-}
-
-function renderSidebar(currentId) {
-  const sidebar = document.getElementById("sidebar");
-  sidebar.innerHTML = `
-    <div class="sidebar-arrows">
-      <button onclick="scrollSidebar(-1)">↑</button>
-      <button class="back-btn" onclick="showList()" style="margin:0;">← All</button>
-      <button onclick="scrollSidebar(1)">↓</button>
+function renderList(){
+  const rows = filtered();
+  grid.innerHTML = rows.map(l => `<article class="card" data-id="${l.id}">
+    ${stageHTML(l)}
+    <div class="body">
+      <span class="fit ${fitClass(l.fit)}">Fit ${l.fit}</span>
+      <h2 class="name">${escapeHtml(l.name)}</h2>
+      <p class="sub">${l.sqft ? Number(l.sqft).toLocaleString() + " sq ft" : "Sq ft not listed"} · ${escapeHtml(l.layout)}</p>
+      <p class="price">${escapeHtml(money(l))}</p>
+      <p class="fine">${escapeHtml(l.area)} · ${escapeHtml(l.available)} · ${escapeHtml(l.source)}</p>
+      <p class="fine">${l.photoCount} photos from this listing only</p>
     </div>
-    <div class="sidebar-inner" id="sidebar-inner"></div>
-  `;
-  const inner = document.getElementById("sidebar-inner");
-  data.sort((a,b) => b.fit - a.fit).forEach(l => {
-    const item = document.createElement("div");
-    item.className = "sidebar-item" + (l.id === currentId ? " active" : "");
-    item.onclick = () => showDetail(l.id);
-    item.innerHTML = `
-      <img src="${l.images[0]}" alt="" onerror="this.style.display='none'">
-      <div>
-        <div style="font-size:0.85rem; font-weight:500;">${l.name}</div>
-        <div style="font-size:0.75rem; color:var(--muted);">Fit ${l.fit} · ${l.price}</div>
-      </div>
-    `;
-    inner.appendChild(item);
-  });
+  </article>`).join("") || `<p class="sub">No listings match.</p>`;
+  bindStage(grid);
+  grid.querySelectorAll(".card").forEach(card => { card.onclick = () => openDetail(card.dataset.id); });
 }
-
-function renderDetail(id) {
-  const l = data.find(x => x.id === id);
-  if (!l) return;
-  const main = document.getElementById("main-detail");
-  main.innerHTML = `
-    <div class="full-gallery-wrap" id="full-${l.id}">
-      <button class="arrow left" onclick="slide('full-${l.id}', -1)">‹</button>
-      <div class="full-gallery">
-        ${l.images.map(src => `<img src="${src}" alt="" onerror="this.style.display='none'">`).join("")}
-      </div>
-      <button class="arrow right" onclick="slide('full-${l.id}', 1)">›</button>
-    </div>
-    <h2 style="margin:0 0 4px;">${l.name}</h2>
-    <p style="margin:0; color:var(--muted);">${l.building} · ${l.address}</p>
-    <div class="info-grid">
-      <div class="section">
-        <h3 style="margin-top:0;">Key facts</h3>
-        <p><strong>Price:</strong> ${l.price}</p>
-        <p><strong>Size:</strong> ${l.size} · ${l.beds}</p>
-        <p><strong>Available:</strong> ${l.available}</p>
-        <p><strong>Utilities:</strong> ${l.utilities}</p>
-        <p><strong>Source:</strong> ${l.source}</p>
-        <p><strong>Fit:</strong> ${l.fit}/10 — ${l.fitReason}</p>
-        <p><a href="${l.link}" target="_blank">View original listing →</a></p>
-      </div>
-      <div class="section">
-        <h3 style="margin-top:0;">Tracking</h3>
+let currentId = null;
+function ordered(){ return [...LISTINGS].sort(byFit); }
+function openDetail(id){
+  currentId = id;
+  document.getElementById("app").style.display = "none";
+  document.getElementById("detail").classList.add("on");
+  renderSide();
+  renderMain();
+}
+function closeDetail(){
+  document.getElementById("detail").classList.remove("on");
+  document.getElementById("app").style.display = "";
+  currentId = null;
+}
+function stepListing(dir){
+  const rows = ordered();
+  const i = rows.findIndex(l => l.id === currentId);
+  const next = rows[(i + dir + rows.length) % rows.length];
+  openDetail(next.id);
+}
+function renderSide(){
+  const box = document.getElementById("side-list");
+  box.innerHTML = ordered().map(l => `<div class="side-item ${l.id===currentId?"on":""}" data-id="${l.id}">
+    <img alt="" src="${l.images[0] || ""}">
+    <div><strong>${escapeHtml(l.name)}</strong><span>Fit ${l.fit} · ${escapeHtml(money(l))} · ${l.photoCount} photos</span></div>
+  </div>`).join("");
+  box.querySelectorAll(".side-item").forEach(el => { el.onclick = () => openDetail(el.dataset.id); });
+  const on = box.querySelector(".on");
+  if (on) on.scrollIntoView({block:"nearest"});
+}
+function chips(list){
+  if (!list.length) return "<span>None listed</span>";
+  return list.map(a => `<span>${escapeHtml(a)}</span>`).join("");
+}
+function renderMain(){
+  const l = LISTINGS.find(x => x.id === currentId);
+  const r = rec(l.id);
+  const fees = (l.fees || []).map(f => `${escapeHtml(f.type)} · ${escapeHtml(f.amount)}`).join("<br>") || "None listed";
+  const a = l.amenities || {inUnit:[], kitchen:[], building:[], safety:[]};
+  const notes = (l.dataNotes || []).map(n => `<li>${escapeHtml(n)}</li>`).join("");
+  document.getElementById("main").innerHTML = `
+    <button class="back" id="back2" type="button">← All listings</button>
+    <div class="hero">${stageHTML(l)}</div>
+    <h2 style="margin:14px 0 4px">${escapeHtml(l.name)}</h2>
+    <p class="sub">${escapeHtml(l.source)} · ${escapeHtml(l.sourceId)} · <a href="${l.link}" target="_blank" rel="noopener">Original listing</a></p>
+    <div class="facts">
+      <section class="panel">
+        <h3>Unit</h3>
+        <dl class="kv">
+          <dt>Layout</dt><dd>${escapeHtml(l.layout)}</dd>
+          <dt>Size</dt><dd>${l.sqft ? Number(l.sqft).toLocaleString()+" sq ft" : "Not listed"}</dd>
+          <dt>Type</dt><dd>${escapeHtml(l.propertyType || "Not listed")}</dd>
+          <dt>Building</dt><dd>${escapeHtml(l.building)}</dd>
+          <dt>Area</dt><dd>${escapeHtml(l.area)}</dd>
+        </dl>
+      </section>
+      <section class="panel">
+        <h3>Money</h3>
+        <dl class="kv">
+          <dt>Rent</dt><dd>${escapeHtml(money(l))}</dd>
+          <dt>Utilities</dt><dd>${escapeHtml(l.utilities || "Not listed")}</dd>
+          <dt>Fees</dt><dd>${fees}</dd>
+          <dt>Fit</dt><dd>${l.fit} / 10</dd>
+        </dl>
+        <p class="fine">${escapeHtml(l.fitReason)}</p>
+      </section>
+      <section class="panel">
+        <h3>Stay</h3>
+        <dl class="kv">
+          <dt>Available</dt><dd>${escapeHtml(l.available || "Not listed")}</dd>
+          <dt>Min stay</dt><dd>${escapeHtml(stayLabel(l))}</dd>
+          <dt>Window</dt><dd>Mid-Dec 2026 to mid/late Feb 2027</dd>
+          <dt>Photos</dt><dd>${l.photoCount} unique files from this listing only</dd>
+        </dl>
+      </section>
+      <section class="panel">
+        <h3>Your tracking</h3>
         <label>Status</label>
-        <select class="status-sel" data-id="${l.id}" style="width:100%; margin-bottom:8px;">
-          <option value="new" ${l.status==="new"?"selected":""}>New</option>
-          <option value="reached" ${l.status==="reached"?"selected":""}>Reached out</option>
-          <option value="responded" ${l.status==="responded"?"selected":""}>Got response</option>
-          <option value="tour" ${l.status==="tour"?"selected":""}>Tour</option>
-          <option value="rejected" ${l.status==="rejected"?"selected":""}>Rejected</option>
-          <option value="booked" ${l.status==="booked"?"selected":""}>Booked</option>
-        </select>
+        <select id="status">${STATUSES.map(s => `<option ${r.status===s?"selected":""}>${escapeHtml(s)}</option>`).join("")}</select>
         <label>Next action</label>
-        <input class="next-input" data-id="${l.id}" value="${l.nextAction || ""}" style="width:100%; margin-bottom:8px;">
+        <input id="next" type="text" value="${escapeHtml(r.next)}">
         <label>Notes</label>
-        <textarea class="notes-input" data-id="${l.id}" rows="3" style="width:100%;">${l.userNotes || ""}</textarea>
-      </div>
+        <textarea id="notes" rows="4">${escapeHtml(r.notes)}</textarea>
+      </section>
     </div>
-    <div class="section">
-      <h3 style="margin-top:0;">Unit amenities</h3>
-      <p>${l.amenities}</p>
-    </div>
-    <div class="section">
-      <h3 style="margin-top:0;">Building</h3>
-      <p>${l.buildingAmenities}</p>
-      <p>${l.notes}</p>
-    </div>
-  `;
-
-  main.querySelector(".status-sel").onchange = e => {
-    const item = data.find(x => x.id === e.target.dataset.id);
-    if (item) { item.status = e.target.value; save(); }
-  };
-  main.querySelector(".next-input").onchange = e => {
-    const item = data.find(x => x.id === e.target.dataset.id);
-    if (item) { item.nextAction = e.target.value; save(); }
-  };
-  main.querySelector(".notes-input").onchange = e => {
-    const item = data.find(x => x.id === e.target.dataset.id);
-    if (item) { item.userNotes = e.target.value; save(); }
-  };
+    <section class="panel" style="margin-top:12px">
+      <h3>Amenities from this listing</h3>
+      <div class="group"><b>In the unit</b><div class="chips">${chips(a.inUnit)}</div></div>
+      <div class="group"><b>Kitchen</b><div class="chips">${chips(a.kitchen)}</div></div>
+      <div class="group"><b>Building</b><div class="chips">${chips(a.building)}</div></div>
+      <div class="group"><b>Safety</b><div class="chips">${chips(a.safety)}</div></div>
+      <p class="fine">Parking is shown only when the host listed it. It does not change the fit score.</p>
+    </section>
+    ${notes ? `<section class="panel" style="margin-top:12px"><h3>Data check</h3><ul class="notes">${notes}</ul></section>` : ""}
+    <section class="panel" style="margin-top:12px">
+      <h3>Host description</h3>
+      <div class="desc">${escapeHtml(l.description || "No description on the listing.")}</div>
+    </section>`;
+  bindStage(document.getElementById("main"));
+  document.getElementById("back2").onclick = closeDetail;
+  document.getElementById("status").onchange = e => { rec(l.id).status = e.target.value; save(); renderSide(); };
+  document.getElementById("next").onchange = e => { rec(l.id).next = e.target.value; save(); };
+  document.getElementById("notes").onchange = e => { rec(l.id).notes = e.target.value; save(); };
 }
+document.getElementById("back").onclick = closeDetail;
+document.getElementById("prev-listing").onclick = () => { if (currentId) stepListing(-1); };
+document.getElementById("next-listing").onclick = () => { if (currentId) stepListing(1); };
+[qEl, fitEl, srcEl, stEl].forEach(el => el.addEventListener("input", renderList));
 
-
-let slideIndex = {};
-function slide(id, dir) {
-  const wrap = document.getElementById(id);
-  if (!wrap) return;
-  const row = wrap.querySelector(".gallery-row, .full-gallery");
-  if (!row) return;
-  const imgs = row.querySelectorAll("img");
-  if (!imgs.length) return;
-  if (!slideIndex[id]) slideIndex[id] = 0;
-  slideIndex[id] = (slideIndex[id] + dir + imgs.length) % imgs.length;
-  row.style.transform = `translateX(-${slideIndex[id] * 100}%)`;
+let map;
+function showMap(){
+  document.getElementById("list-view").hidden = true;
+  document.getElementById("map-view").hidden = false;
+  document.getElementById("tab-map").classList.add("on");
+  document.getElementById("tab-list").classList.remove("on");
+  if (!map){
+    map = L.map("map").setView([25.763, -80.193], 15);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {attribution:"© OpenStreetMap"}).addTo(map);
+    LISTINGS.filter(l => l.lat && l.lng).forEach(l => {
+      L.marker([l.lat, l.lng]).addTo(map).bindPopup(
+        `<strong>${escapeHtml(l.name)}</strong><br>${escapeHtml(l.area)}<br>${escapeHtml(money(l))} · ${l.sqft || "?"} sq ft<br>${l.photoCount} photos`
+      );
+    });
+  }
+  setTimeout(() => map.invalidateSize(), 50);
 }
-document.getElementById("search").addEventListener("input", renderList);
-document.getElementById("filterFit").addEventListener("change", renderList);
-document.getElementById("filterStatus").addEventListener("change", renderList);
+function showListView(){
+  document.getElementById("map-view").hidden = true;
+  document.getElementById("list-view").hidden = false;
+  document.getElementById("tab-list").classList.add("on");
+  document.getElementById("tab-map").classList.remove("on");
+}
+document.getElementById("tab-map").onclick = showMap;
+document.getElementById("tab-list").onclick = showListView;
 renderList();
 </script>
 </body>
