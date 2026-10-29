@@ -16,7 +16,7 @@ export default async (req) => {
       await store.setJSON("ids", ids);
     }
   }
-  return new Response(JSON.stringify({ ids }), {
+  return new Response(JSON.stringify({ ids, v: 2 }), {
     headers: {
       "content-type": "application/json",
       "cache-control": "no-store",
