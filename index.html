@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brickell 2BR Stay Tracker</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --bg: #f8fafc;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+    --blue: #2563eb;
+    --high: #d1fae5;
+    --high-text: #065f46;
+    --med: #fef3c7;
+    --med-text: #92400e;
+    --low: #fee2e2;
+    --low-text: #991b1b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+  header h1 { font-size: 1.75rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+  header p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+  .tags { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag { font-size: 0.75rem; padding: 4px 10px; border-radius: 999px; background: #e2e8f0; color: #334155; }
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin: 20px 0 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--muted);
+    border-bottom: 2px solid transparent;
+  }
+  .tab.active {
+    color: var(--blue);
+    border-bottom-color: var(--blue);
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .filters {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .filters input, .filters select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    min-width: 160px;
+  }
+  .listings { display: flex; flex-direction: column; gap: 16px; }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .card-inner { display: flex; flex-direction: column; }
+  @media (min-width: 700px) {
+    .card-inner { flex-direction: row; }
+  }
+  .thumb {
+    width: 100%;
+    height: 200px;
+    background: #e2e8f0;
+    position: relative;
+    flex-shrink: 0;
+    overflow: hidden;
+  }
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  @media (min-width: 700px) {
+    .thumb { width: 240px; height: auto; min-height: 220px; }
+  }
+  .fit-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 999px;
+    z-index: 1;
+  }
+  .fit-high { background: var(--high); color: var(--high-text); }
+  .fit-med { background: var(--med); color: var(--med-text); }
+  .fit-low { background: var(--low); color: var(--low-text); }
+  .content { padding: 16px; flex: 1; }
+  .title-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .title-row h3 { margin: 0; font-size: 1.1rem; }
+  .sub { margin: 2px 0 0; font-size: 0.85rem; color: var(--muted); }
+  .price { font-weight: 700; font-size: 1.15rem; text-align: right; }
+  .size { font-size: 0.8rem; color: var(--muted); text-align: right; }
+  .meta { margin-top: 8px; font-size: 0.85rem; color: #475569; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 16px; }
+  .notes { margin: 8px 0; font-size: 0.875rem; }
+  .notes strong { color: var(--text); }
+  .fit-reason { font-size: 0.75rem; color: var(--muted); margin: 4px 0 8px; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+  .actions a { color: var(--blue); font-size: 0.85rem; text-decoration: underline; }
+  .actions select, .actions input, .notes-input {
+    font-size: 0.85rem;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .next-action { width: 100%; margin-top: 6px; }
+  .notes-input { width: 100%; margin-top: 6px; min-height: 52px; resize: vertical; }
+  #map { height: 520px; border-radius: 12px; border: 1px solid var(--border); }
+  .footer-note {
+    margin-top: 32px;
+    padding: 16px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .empty { text-align: center; color: var(--muted); padding: 40px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Brickell 2BR Stay Tracker</h1>
+    <p>Furnished 2-bedroom · mid-Dec 2026 → mid/late-Feb 2027 · 2 people · ≤ $5,500/mo · Prioritize location + size · Prefer newer buildings</p>
+    <div class="tags">
+      <span class="tag">Flexible dates</span>
+      <span class="tag">Parking not required</span>
+      <span class="tag">Newer buildings preferred</span>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="listings">Listings</button>
+    <button class="tab" data-tab="map">Map</button>
+  </div>
+
+  <div id="listings-panel" class="panel active">
+    <div class="filters">
+      <input id="search" type="text" placeholder="Search listings…">
+      <select id="filterFit">
+        <option value="">All fit scores</option>
+        <option value="high">High (≥8)</option>
+        <option value="med">Medium (6–7.9)</option>
+        <option value="low">Low (≤5.9)</option>
+      </select>
+      <select id="filterStatus">
+        <option value="">All statuses</option>
+        <option value="new">New</option>
+        <option value="reached">Reached out</option>
+        <option value="responded">Got response</option>
+        <option value="tour">Tour</option>
+        <option value="rejected">Rejected</option>
+        <option value="booked">Booked</option>
+      </select>
+    </div>
+    <div id="listings" class="listings"></div>
+  </div>
+
+  <div id="map-panel" class="panel">
+    <div id="map"></div>
+  </div>
+
+  <div class="footer-note">
+    <strong>How to use:</strong> Status, next action, and notes save in your browser. Tell me any new listings and I’ll add them. Research on floor plans & building reviews is still running.
+  </div>
+</div>
+
+<script>
+const defaultListings = [
+  {
+    id: "ev-charger",
+    name: "Brickell 2/2 – EV Charger, Free Parking, Big Balcony",
+    building: "TBD (researching)",
+    address: "Brickell, Miami",
+    lat: 25.762, lng: -80.191,
+    size: "1400 sq ft",
+    beds: "2BR / 2BA",
+    price: "$4,995/mo",
+    utilities: "Included",
+    available: "Dec 12, 2026",
+    source: "Furnished Finder",
+    link: "https://www.furnishedfinder.com/property/956644_1",
+    img: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80",
+    amenities: "In-unit laundry, parking + EV, large balcony, workspace, sunrise views",
+    buildingAmenities: "Researching…",
+    fit: 8.5,
+    fitReason: "Excellent size + under budget; parking/EV is bonus (not required). Building age TBD – newer preferred.",
+    status: "new",
+    nextAction: "Send inquiry / confirm exact building & floor plan",
+    userNotes: ""
+  },
+  {
+    id: "my-brickell",
+    name: "Live the Brickell Lifestyle",
+    building: "My Brickell",
+    address: "31 SE 6th St, Miami, FL 33131",
+    lat: 25.7665, lng: -80.1925,
+    size: "1100 sq ft",
+    beds: "2BR / 2BA",
+    price: "$4,300/mo",
+    utilities: "Included",
+    available: "Dec 31, 2026 (min 3 mo listed)",
+    source: "Furnished Finder",
+    link: "https://www.furnishedfinder.com/property/1003912_1",
+    img: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&q=80",
+    amenities: "Washer/dryer, views, home office",
+    buildingAmenities: "Rooftop pool, gym, spa, clubroom, concierge, Karim Rashid design, Metromover adjacent (newer 2013/14 building)",
+    fit: 7.5,
+    fitReason: "Newer building (2013/14) + prime location; size a bit under ideal, min stay check needed",
+    status: "new",
+    nextAction: "Confirm 2-month flex + exact unit photos/floor plan",
+    userNotes: ""
+  },
+  {
+    id: "on-the-water",
+    name: "Brickell 2/2 On The Water",
+    building: "TBD",
+    address: "Brickell (quiet side)",
+    lat: 25.758, lng: -80.193,
+    size: "1200 sq ft",
+    beds: "2BR / 2BA",
+    price: "$2,900/mo",
+    utilities: "Included",
+    available: "Oct 6, 2026 (recheck window)",
+    source: "Furnished Finder",
+    link: "https://www.furnishedfinder.com/property/362988_1",
+    img: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80",
+    amenities: "Ocean/bay views, private baths",
+    buildingAmenities: "Researching…",
+    fit: 7.5,
+    fitReason: "Great size + value; calendar & stairs need verification. Building age unknown (newer preferred).",
+    status: "new",
+    nextAction: "Check Dec–Feb availability + building details",
+    userNotes: ""
+  },
+  {
+    id: "four-ambassadors",
+    name: "Furnished 2BR/2BA · The Four Ambassadors",
+    building: "The Four Ambassadors",
+    address: "801 Brickell Bay Dr, Miami, FL 33131",
+    lat: 25.7628, lng: -80.1868,
+    size: "990 sq ft",
+    beds: "2BR / 2BA",
+    price: "$3,950/mo",
+    utilities: "Included",
+    available: "Short-term ok",
+    source: "MLS / Haute Team",
+    link: "https://www.hauteteam.com/property-search/detail/134/A12088174/801-brickell-bay-dr-miami-fl-33131/",
+    img: "https://images.unsplash.com/photo-1460317442991-0ec209397118?w=800&q=80",
+    amenities: "Bay views, turnkey, utilities included",
+    buildingAmenities: "2 Olympic pools, marina, spa, gym, restaurants, grocery, valet, 24h security (older 1960s complex)",
+    fit: 5.5,
+    fitReason: "Iconic location + amenities; size under preference, older building lowers fit",
+    status: "new",
+    nextAction: "Request current photos + confirm 2-month rate",
+    userNotes: ""
+  }
+];
+
+let data = defaultListings;
+try {
+  const stored = localStorage.getItem("brickellTrackerV4");
+  if (stored) data = JSON.parse(stored);
+} catch (e) {}
+
+function save() {
+  try { localStorage.setItem("brickellTrackerV4", JSON.stringify(data)); } catch (e) {}
+}
+
+function fitClass(f) {
+  return f >= 8 ? "fit-high" : f >= 6 ? "fit-med" : "fit-low";
+}
+
+function render() {
+  const q = (document.getElementById("search")?.value || "").toLowerCase();
+  const ff = document.getElementById("filterFit")?.value || "";
+  const fs = document.getElementById("filterStatus")?.value || "";
+  const container = document.getElementById("listings");
+  container.innerHTML = "";
+
+  const filtered = data.filter(l => {
+    const hay = (l.name + " " + (l.building||"") + " " + (l.amenities||"") + " " + (l.userNotes||"")).toLowerCase();
+    const matchQ = !q || hay.includes(q);
+    const matchF = !ff || (ff === "high" && l.fit >= 8) || (ff === "med" && l.fit >= 6 && l.fit < 8) || (ff === "low" && l.fit < 6);
+    const matchS = !fs || l.status === fs;
+    return matchQ && matchF && matchS;
+  }).sort((a, b) => b.fit - a.fit);
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="empty">No listings match the current filters.</div>';
+    return;
+  }
+
+  filtered.forEach(l => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="thumb">
+          <div class="fit-badge ${fitClass(l.fit)}">Fit ${l.fit}/10</div>
+          <img src="${l.img}" alt="${l.name}" onerror="this.style.display='none'; this.parentElement.style.background='#cbd5e1';">
+        </div>
+        <div class="content">
+          <div class="title-row">
+            <div>
+              <h3>${l.name}</h3>
+              <p class="sub">${l.building} · ${l.address}</p>
+            </div>
+            <div>
+              <div class="price">${l.price}</div>
+              <div class="size">${l.size}</div>
+            </div>
+          </div>
+          <div class="meta">
+            <div>Avail: ${l.available}</div>
+            <div>Source: ${l.source}</div>
+          </div>
+          <p class="notes"><strong>Unit:</strong> ${l.amenities}</p>
+          <p class="notes"><strong>Building:</strong> ${l.buildingAmenities}</p>
+          <p class="fit-reason">${l.fitReason}</p>
+          <div class="actions">
+            <a href="${l.link}" target="_blank">View listing →</a>
+            <select class="status-sel" data-id="${l.id}">
+              <option value="new" ${l.status==="new"?"selected":""}>New</option>
+              <option value="reached" ${l.status==="reached"?"selected":""}>Reached out</option>
+              <option value="responded" ${l.status==="responded"?"selected":""}>Got response</option>
+              <option value="tour" ${l.status==="tour"?"selected":""}>Tour</option>
+              <option value="rejected" ${l.status==="rejected"?"selected":""}>Rejected</option>
+              <option value="booked" ${l.status==="booked"?"selected":""}>Booked</option>
+            </select>
+          </div>
+          <input class="next-input next-action" data-id="${l.id}" placeholder="Next action…" value="${l.nextAction || ""}">
+          <textarea class="notes-input" data-id="${l.id}" placeholder="Your notes…">${l.userNotes || ""}</textarea>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+
+  document.querySelectorAll(".status-sel").forEach(el => {
+    el.onchange = e => {
+      const item = data.find(x => x.id === e.target.dataset.id);
+      if (item) { item.status = e.target.value; save(); }
+    };
+  });
+  document.querySelectorAll(".next-input").forEach(el => {
+    el.onchange = e => {
+      const item = data.find(x => x.id === e.target.dataset.id);
+      if (item) { item.nextAction = e.target.value; save(); }
+    };
+  });
+  document.querySelectorAll(".notes-input").forEach(el => {
+    el.onchange = e => {
+      const item = data.find(x => x.id === e.target.dataset.id);
+      if (item) { item.userNotes = e.target.value; save(); }
+    };
+  });
+}
+
+let map, markers = [];
+function initMap() {
+  if (map) return;
+  map = L.map("map").setView([25.763, -80.191], 15);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; OpenStreetMap'
+  }).addTo(map);
+  data.forEach(l => {
+    if (l.lat && l.lng) {
+      const m = L.marker([l.lat, l.lng]).addTo(map)
+        .bindPopup(`<b>${l.name}</b><br>${l.building}<br>Fit ${l.fit}/10 · ${l.price}<br><a href="${l.link}" target="_blank">View listing</a>`);
+      markers.push(m);
+    }
+  });
+}
+
+document.querySelectorAll(".tab").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById(btn.dataset.tab + "-panel").classList.add("active");
+    if (btn.dataset.tab === "map") {
+      setTimeout(() => {
+        initMap();
+        if (map) map.invalidateSize();
+      }, 50);
+    }
+  });
+});
+
+document.getElementById("search").addEventListener("input", render);
+document.getElementById("filterFit").addEventListener("change", render);
+document.getElementById("filterStatus").addEventListener("change", render);
+render();
+</script>
+</body>
+</html>
